@@ -125,8 +125,30 @@ async function selectAndWait(page, selectBaseName, value) {
       break;
     } catch { /* try next */ }
   }
+  // Wait for network to settle after ASP.NET postback
   try { await page.waitForLoadState("networkidle", { timeout: TIMEOUT }); }
   catch { await sleep(1500); }
+
+  // For SelectResult: additionally wait for a data table row to actually appear
+  // (AJAX can finish network-idle before the DOM is fully rendered)
+  if (selectBaseName.toLowerCase().includes("result")) {
+    try {
+      await page.waitForFunction(() => {
+        const tables = Array.from(document.querySelectorAll("table"));
+        return tables.some(t => {
+          const rows = t.querySelectorAll("tr");
+          return Array.from(rows).some(tr => {
+            const cells = tr.querySelectorAll(":scope > td");
+            return cells.length >= 3 && /^\d+$/.test((cells[0].textContent || "").trim());
+          });
+        });
+      }, { timeout: 8000 });
+      dbg(`    table rows appeared`);
+    } catch {
+      dbg(`    waitForFunction timeout — proceeding anyway`);
+    }
+  }
+
   await sleep(SLOW_MS);
 }
 
@@ -599,7 +621,7 @@ async function scrape() {
             await selectAndWait(page, "SelectRace", race.value);
 
             const resultTypes = await getOptions(page, "SelectResult").catch(() => []);
-            dbg(`        Result types: ${resultTypes.map(r => r.text).join(", ")}`);
+            log(`        Result types (${resultTypes.length}): ${resultTypes.map(r => r.text).join(", ") || "none"}`);
 
             // Sort: WANTED types first (by priority index), SKIP types removed
             const filteredTypes = resultTypes.filter(rt => {
@@ -618,7 +640,8 @@ async function scrape() {
             const resultSets = [];
 
             if (sortedTypes.length === 0) {
-              // No SelectResult dropdown — parse current page directly
+              // No SelectResult dropdown — likely data not yet published for this race
+              log(`        No result types — trying current page directly`);
               const parsed = await parseResultTable(page, "Classification");
               if (parsed.rows.length) resultSets.push(parsed);
             } else {

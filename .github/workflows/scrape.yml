@@ -1,36 +1,32 @@
 name: MXGP Auto-Scrape
 
-# ── Déclencheurs ──────────────────────────────────────────
 on:
-  # Lance automatiquement chaque dimanche et lundi soir (après les courses)
   schedule:
     - cron: "0 22 * * 0"   # Dimanche 22h UTC
     - cron: "0 22 * * 1"   # Lundi   22h UTC
-
-  # Lance aussi manuellement depuis l'onglet Actions sur GitHub
   workflow_dispatch:
     inputs:
       year:
-        description: "Année à scraper (ex: 2026, ou 'all')"
+        description: "Année (ex: 2026, ou 'all')"
         required: false
         default: "2026"
       cat:
-        description: "Catégorie (ex: MXGP, MX2, ou vide = toutes)"
+        description: "Catégorie (ex: MXGP, MX2, vide = toutes)"
         required: false
         default: "MXGP"
-
-  # Lance à chaque push sur main (utile pour les tests)
+      debug:
+        description: "Mode debug verbose (true/false)"
+        required: false
+        default: "false"
   push:
     branches: [main]
     paths:
       - "scraper/scraper.js"
       - ".github/workflows/scrape.yml"
 
-# ── Permissions ───────────────────────────────────────────
 permissions:
-  contents: write   # nécessaire pour git push
+  contents: write
 
-# ── Job ───────────────────────────────────────────────────
 jobs:
   scrape:
     name: Scrape MXGP Results
@@ -38,11 +34,9 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      # 1. Checkout du repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Node.js
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -50,31 +44,31 @@ jobs:
           cache: "npm"
           cache-dependency-path: scraper/package-lock.json
 
-      # 3. Installer dépendances scraper
       - name: Install dependencies
         working-directory: scraper
         run: npm ci
 
-      # 4. Installer Chromium pour Playwright
       - name: Install Playwright Chromium
         working-directory: scraper
         run: npx playwright install chromium --with-deps
 
-      # 5. Lancer le scraper — sorties dans data/results.json
       - name: Run scraper
         working-directory: scraper
         env:
-          YEAR:  ${{ github.event.inputs.year  || '2026' }}
-          CAT:   ${{ github.event.inputs.cat   || 'MXGP' }}
+          YEAR: ${{ github.event.inputs.year  || '2026' }}
+          CAT:  ${{ github.event.inputs.cat   || 'MXGP' }}
+          DBG:  ${{ github.event.inputs.debug || 'false' }}
         run: |
           mkdir -p ../data
+          EXTRA=""
+          if [ "$DBG" = "true" ]; then EXTRA="--debug"; fi
           node scraper.js \
             --year "$YEAR" \
             --cat  "$CAT"  \
             --out  ../data/results.json \
-            --slow 1200
+            --slow 1500 \
+            $EXTRA
 
-      # 6. Vérifier que le JSON n'est pas vide
       - name: Check output
         run: |
           if [ ! -f data/results.json ]; then
@@ -84,18 +78,18 @@ jobs:
           SESSIONS=$(node -e "const d=require('./data/results.json'); console.log(d.total||0)")
           echo "Sessions scraped: $SESSIONS"
           if [ "$SESSIONS" = "0" ]; then
-            echo "::warning::0 sessions scraped — le site a peut-être changé de structure"
+            echo "::warning::0 sessions — pas encore de données ou structure du site modifiée"
+            echo "::warning::Relancer manuellement avec debug=true pour voir l'HTML du site"
           fi
 
-      # 7. Commit et push du JSON mis à jour
+      # Commit → GitHub Pages se met à jour automatiquement depuis la branche main
       - name: Commit data
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/results.json
-          # Ne commit que si le fichier a changé
           if git diff --cached --quiet; then
-            echo "No changes — skipping commit"
+            echo "Pas de changement — commit ignoré"
           else
             SESSIONS=$(node -e "const d=require('./data/results.json'); console.log(d.total||0)")
             git commit -m "🏁 Auto-scrape: ${SESSIONS} sessions [$(date +'%Y-%m-%d %H:%M UTC')]"
