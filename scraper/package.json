@@ -1,0 +1,17 @@
+{
+  "name": "mxgp-scraper",
+  "version": "2.0.0",
+  "description": "MXGP results scraper using Playwright",
+  "main": "scraper.js",
+  "scripts": {
+    "scrape": "node scraper.js --year 2026 --cat MXGP --out ../data/results.json",
+    "scrape:all": "node scraper.js --year all --out ../data/results.json",
+    "scrape:debug": "node scraper.js --year 2026 --cat MXGP --out ../data/results.json --debug --slow 2000"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

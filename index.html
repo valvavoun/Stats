@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MXGP Race Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/stats.css" />
+  </head>
+  <body>
+
+    <!-- ══════════════ HEADER ══════════════ -->
+    <div class="hdr">
+      <div class="hdr-inner">
+        <div class="hdr-brand">
+          <div class="brand-text">
+            <div class="brand-cat" id="brand-cat">MXGP</div>
+            <div class="brand-sess">FIM Motocross World Championship · Race Analytics</div>
+          </div>
+        </div>
+
+        <div class="hdr-center">
+          <div class="session-badge" id="session-badge">
+            <span class="sb-cat" id="sb-cat">—</span>
+            <span class="sb-sep">·</span>
+            <span class="sb-event" id="sb-event">Aucune session</span>
+            <span class="sb-sep">·</span>
+            <span class="sb-race" id="sb-race">—</span>
+          </div>
+          <div class="session-date" id="session-date">Importez des données pour commencer</div>
+        </div>
+
+        <div class="hdr-right">
+          <button class="hdr-btn" id="btn-import" title="Importer JSON">
+            <span>⬆</span> IMPORT
+          </button>
+          <button class="hdr-btn accent" id="btn-export" title="Exporter JSON" disabled>
+            <span>⬇</span> EXPORT
+          </button>
+          <input type="file" id="file-input" accept=".json" hidden />
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TOOLBAR ══════════════ -->
+    <div class="toolbar" id="toolbar">
+      <!-- Session selector -->
+      <div class="tb-group">
+        <span class="tb-label">SESSION</span>
+        <select class="tb-select" id="sel-session">
+          <option value="">— Aucune —</option>
+        </select>
+        <button class="tb-btn danger" id="btn-del-session" title="Supprimer" disabled>✕</button>
+      </div>
+      <!-- Chart tabs -->
+      <div class="tb-tabs" id="chart-tabs">
+        <button class="tb-tab active" data-tab="lap">LAP TIMES</button>
+        <button class="tb-tab" data-tab="gap">GAP</button>
+        <button class="tb-tab" data-tab="pos">POSITION</button>
+        <button class="tb-tab" data-tab="pace">PACE</button>
+        <button class="tb-tab" data-tab="sector">SECTORS</button>
+        <button class="tb-tab" data-tab="consistency">CONSISTENCY</button>
+      </div>
+      <!-- Rider count -->
+      <div class="tb-group ml-auto">
+        <span class="tb-label">MAX RIDERS</span>
+        <select class="tb-select w60" id="sel-max-riders">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+          <option value="0">ALL</option>
+        </select>
+        <button class="tb-btn" id="btn-top10">TOP 10</button>
+        <button class="tb-btn" id="btn-clear-sel">RESET</button>
+      </div>
+    </div>
+
+    <!-- ══════════════ MAIN LAYOUT ══════════════ -->
+    <div class="main-layout">
+
+      <!-- ── LEFT PANEL ── -->
+      <div class="left-panel" id="left-panel">
+
+        <!-- Rider selector -->
+        <div class="panel-section">
+          <div class="panel-title">
+            PILOTES
+            <span class="panel-count" id="rider-sel-count">0/0</span>
+          </div>
+          <div class="rider-list" id="rider-list">
+            <div class="empty-state">Aucune donnée</div>
+          </div>
+        </div>
+
+        <!-- Sessions saved -->
+        <div class="panel-section">
+          <div class="panel-title">SESSIONS SAUVEGARDÉES</div>
+          <div class="session-list" id="session-list">
+            <div class="empty-state">Aucune session</div>
+          </div>
+        </div>
+
+        <!-- Manual import form toggle -->
+        <div class="panel-section">
+          <button class="panel-btn full" id="btn-manual">+ SAISIE MANUELLE</button>
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT CONTENT ── -->
+      <div class="right-content">
+
+        <!-- Stat cards -->
+        <div class="stat-cards" id="stat-cards">
+          <div class="stat-card placeholder">
+            <div class="sc-icon">🏆</div>
+            <div class="sc-label">VAINQUEUR</div>
+            <div class="sc-value">—</div>
+            <div class="sc-sub">—</div>
+          </div>
+          <div class="stat-card placeholder">
+            <div class="sc-icon">⚡</div>
+            <div class="sc-label">MEILLEUR TOUR</div>
+            <div class="sc-value">—</div>
+            <div class="sc-sub">—</div>
+          </div>
+          <div class="stat-card placeholder">
+            <div class="sc-icon">📊</div>
+            <div class="sc-label">MEILLEURE PACE</div>
+            <div class="sc-value">—</div>
+            <div class="sc-sub">—</div>
+          </div>
+          <div class="stat-card placeholder">
+            <div class="sc-icon">🎯</div>
+            <div class="sc-label">PLUS RÉGULIER</div>
+            <div class="sc-value">—</div>
+            <div class="sc-sub">—</div>
+          </div>
+          <div class="stat-card placeholder">
+            <div class="sc-icon">🚀</div>
+            <div class="sc-label">MEILLEUR DÉPART</div>
+            <div class="sc-value">—</div>
+            <div class="sc-sub">—</div>
+          </div>
+          <div class="stat-card placeholder">
+            <div class="sc-icon">📈</div>
+            <div class="sc-label">MAX POSITIONS</div>
+            <div class="sc-value">—</div>
+            <div class="sc-sub">—</div>
+          </div>
+        </div>
+
+        <!-- Chart area -->
+        <div class="chart-area" id="chart-area">
+          <div class="chart-header">
+            <span class="chart-title" id="chart-title">LAP TIMES EVOLUTION</span>
+            <span class="chart-hint" id="chart-hint">Sélectionnez des données pour afficher les graphiques</span>
+          </div>
+          <div class="chart-wrap" id="chart-wrap">
+            <div class="no-data-msg" id="no-data-msg">
+              <div class="spin"></div>
+              <div class="load-txt">IMPORTEZ DES DONNÉES POUR COMMENCER</div>
+              <div class="load-sub">JSON depuis le scraper MXGP · Saisie manuelle</div>
+            </div>
+            <canvas id="main-chart" style="display:none"></canvas>
+          </div>
+        </div>
+
+        <!-- Stats table -->
+        <div class="stats-table-wrap" id="stats-table-wrap">
+          <div class="stbl-header">
+            <span class="stbl-title">ANALYSE DÉTAILLÉE</span>
+            <div class="stbl-cols-toggle">
+              <button class="col-tog active" data-col="base">BASE</button>
+              <button class="col-tog active" data-col="lap">LAPS</button>
+              <button class="col-tog active" data-col="sector">SECTORS</button>
+              <button class="col-tog" data-col="adv">AVANCÉ</button>
+            </div>
+          </div>
+          <div class="stbl-scroll">
+            <table class="stbl" id="stats-table">
+              <thead id="stbl-thead">
+                <tr>
+                  <th class="tc c">POS</th>
+                  <th class="tc c">NR</th>
+                  <th class="tc">PILOTE</th>
+                  <th class="tc c">BIKE</th>
+                  <th class="tc c col-base">TOTAL</th>
+                  <th class="tc c col-base">LAPS</th>
+                  <th class="tc c col-lap">BEST LAP</th>
+                  <th class="tc c col-lap">AVG LAP</th>
+                  <th class="tc c col-lap">PACE*</th>
+                  <th class="tc c col-lap">σ CONSIST.</th>
+                  <th class="tc c col-sector">S1 AVG</th>
+                  <th class="tc c col-sector">S2 AVG</th>
+                  <th class="tc c col-sector">S3 AVG</th>
+                  <th class="tc c col-sector">S4 AVG</th>
+                  <th class="tc c col-adv">GRID</th>
+                  <th class="tc c col-adv">Δ POS</th>
+                  <th class="tc c col-adv">PTS</th>
+                </tr>
+              </thead>
+              <tbody id="stbl-tbody">
+                <tr><td colspan="17" class="stbl-empty">Aucune donnée chargée</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stbl-footnote">* Pace = moyenne des tours (excl. meilleur + pire tour) · σ = écart-type en secondes</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════ MANUAL INPUT MODAL ══════════════ -->
+    <div class="modal-overlay" id="modal-overlay" hidden>
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title">SAISIE MANUELLE — NOUVELLE SESSION</span>
+          <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Meta -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">CATÉGORIE</label>
+              <select class="form-input" id="m-cat">
+                <option>MXGP</option><option>MX2</option><option>WMX</option>
+                <option>JMX65</option><option>JMX85</option><option>JMX125</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">MANCHE / GP</label>
+              <input class="form-input" id="m-event" type="text" placeholder="ex: Grand Prix d'Italie" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">COURSE</label>
+              <select class="form-input" id="m-race">
+                <option>Race 1</option><option>Race 2</option>
+                <option>Qualifying Race</option><option>Free Practice</option>
+                <option>Time Practice</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">DATE</label>
+              <input class="form-input" id="m-date" type="date" />
+            </div>
+          </div>
+
+          <!-- Paste area -->
+          <div class="form-group full">
+            <label class="form-label">
+              COLLER DONNÉES JSON
+              <span class="form-hint">Format : tableau de pilotes avec pos, nr, firstName, lastName, bike, lapTimes (secondes), sectors, etc.</span>
+            </label>
+            <textarea class="form-textarea" id="m-json" rows="10" placeholder='[
+  {
+    "pos": 1, "nr": 1,
+    "firstName": "Jeffrey", "lastName": "Herlings",
+    "nat": "NED", "bike": "KTM",
+    "totalTime": "34:12.456",
+    "laps": 18,
+    "lapTimes": [118.1, 116.5, 115.9, ...],
+    "sectors": [[28.1,32.4,21.5,36.1], ...],
+    "bestLap": 114.3, "bestLapNum": 5,
+    "gridPos": 2, "points": 25
+  }
+]'></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="form-btn" id="m-cancel">ANNULER</button>
+            <button class="form-btn accent" id="m-save">SAUVEGARDER SESSION</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TICKER ══════════════ -->
+    <div class="ticker">
+      <div class="t-cat" id="t-cat">STATS</div>
+      <div class="t-scroll">
+        <div class="t-inner" id="t-inner">
+          <span class="ti">MXGP Race Analytics · Importez des données JSON depuis le scraper ou saisie manuelle</span>
+          <span class="ti">MXGP Race Analytics · Importez des données JSON depuis le scraper ou saisie manuelle</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart.js + datalabels plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+    <script src="js/stats.js"></script>
+  </body>
+</html>
