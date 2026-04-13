@@ -153,61 +153,63 @@ async function selectAndWait(page, selectBaseName, value) {
 }
 
 /* ══════════════════════════════════════════
-   TABLE PARSING  (v3 — scoped cell selection)
+   TABLE PARSING  (v4 — single-evaluate, directRows only)
 ══════════════════════════════════════════ */
 
 /**
- * Find the index of the most "data-like" table on the page.
- * Evaluation runs inside the browser with :scope > td/th (no nested bleed).
+ * Returns ONLY the direct-child <tr> rows of a table element,
+ * ignoring rows from any nested tables.
+ * Works on <table>, <thead>, <tbody>, <tfoot>.
+ * This helper is inlined inside page.evaluate() calls.
  */
-async function findBestTableIdx(page) {
-  return page.evaluate(() => {
-    const tables = Array.from(document.querySelectorAll("table"));
-    let bestIdx = -1, bestScore = 0;
-
-    tables.forEach((t, i) => {
-      const rows = Array.from(t.querySelectorAll("tr"));
-      let dataCount = 0, headerFound = false;
-
-      for (const tr of rows) {
-        const cells = Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
-          .map(c => (c.innerText || c.textContent || "").trim());
-
-        if (cells.length < 3) continue;
-        if (/^\d+$/.test(cells[0])) dataCount++;
-        if (/^pos$/i.test(cells[0]) && /^(nr|num|#|no)$/i.test(cells[1] || "")) headerFound = true;
-        if (/^pos$/i.test(cells[0]) && /^rider$/i.test(cells[2] || ""))         headerFound = true;
-      }
-
-      const score = dataCount * 10 + (headerFound ? 100 : 0);
-      if (score > bestScore) { bestScore = score; bestIdx = i; }
-    });
-
-    return { idx: bestIdx, score: bestScore };
-  });
-}
+// (Used as inline string inside evaluate — see parseResultTable)
 
 /**
  * Parse the per-rider Analysis table.
  * Structure: outer table whose <td> cells each contain an inner table
  * with per-lap rows (Lap | Laptime | S1 | S2 | S3 | S4).
+ * v4: uses directRows to avoid nested bleed; more robust header detection.
  */
 async function parseAnalysisTable(page, resultType) {
   // Step 1: collect raw blocks inside the browser
   const blocks = await page.evaluate(() => {
-    // Leaf tables = tables that contain no nested tables = per-rider lap tables
-    const allTables = Array.from(document.querySelectorAll("table"));
-    const leafTables = allTables.filter(t => t.querySelectorAll("table").length === 0);
+    // directRows: only DIRECT child <tr> of a table (skip nested table rows)
+    function directRows(table) {
+      const rows = [];
+      for (const el of table.children) {
+        if (el.tagName === "TR") rows.push(el);
+        else if (["TBODY", "THEAD", "TFOOT"].includes(el.tagName)) {
+          for (const tr of el.children) {
+            if (tr.tagName === "TR") rows.push(tr);
+          }
+        }
+      }
+      return rows;
+    }
 
-    // Keep only tables whose first row looks like a lap-data header
-    const lapTables = leafTables.filter(t => {
-      const rows = Array.from(t.querySelectorAll("tr"));
+    function cellTexts(tr) {
+      return Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
+        .map(c => (c.innerText || c.textContent || "").trim());
+    }
+
+    const allTables = Array.from(document.querySelectorAll("table"));
+
+    // Lap table: first direct header cell = "lap", second = something with "laptime"/"time"/"section"
+    function isLapTable(t) {
+      const rows = directRows(t);
       if (rows.length < 3) return false;
-      const hText = (rows[0].innerText || rows[0].textContent || "").trim().toLowerCase();
-      return (hText.includes("lap") && hText.includes("time")) ||
-              hText.includes("laptime") ||
-             (hText.includes("lap") && hText.includes("section"));
-    });
+      const cells = cellTexts(rows[0]);
+      if (cells.length < 2) return false;
+      const c0 = cells[0].toLowerCase();
+      const c1 = cells[1].toLowerCase();
+      // Strict: first cell = "lap", second contains "laptime" or "time"
+      if (c0 === "lap" && (c1.includes("laptime") || c1 === "time")) return true;
+      // Looser fallback: row text includes lap+section
+      const rowText = (rows[0].innerText || rows[0].textContent || "").toLowerCase();
+      return (rowText.includes("lap") && rowText.includes("section"));
+    }
+
+    const lapTables = allTables.filter(isLapTable);
 
     return lapTables.map(t => {
       // Rider info is the text in the parent <td>, minus the table's own content
@@ -220,11 +222,10 @@ async function parseAnalysisTable(page, resultType) {
           .replace(/\s+/g, " ").trim();
       }
 
-      // Rows with scoped cells (no nested bleed)
-      const rows = Array.from(t.querySelectorAll("tr")).map(tr =>
-        Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
-          .map(c => (c.innerText || c.textContent || "").trim())
-      ).filter(r => r.length >= 2);
+      // Use directRows to avoid any nested table row bleed
+      const rows = directRows(t)
+        .map(tr => cellTexts(tr))
+        .filter(r => r.length >= 2);
 
       return { riderInfo, rows };
     });
@@ -295,7 +296,8 @@ async function parseAnalysisTable(page, resultType) {
 
 /**
  * Parse the main results table currently displayed on the page.
- * Returns { resultType, rows: [...] }
+ * v4: runs ENTIRELY in one page.evaluate() — no index crossing the Node/browser
+ * boundary, and directRows() prevents nested-table row bleed.
  */
 async function parseResultTable(page, resultType) {
   if (DEBUG) {
@@ -314,7 +316,7 @@ async function parseResultTable(page, resultType) {
 
   // ── Skip position matrix / cumulative tables ──────────────────
   if (rtLower.includes("lap chart")) {
-    dbg("  Skip Lap Chart (P/L position matrix — lap times come from Analysis)");
+    dbg("  Skip Lap Chart");
     return { resultType, rows: [] };
   }
   if (rtLower.includes("world championship") || rtLower.includes("manufacturers")) {
@@ -322,45 +324,70 @@ async function parseResultTable(page, resultType) {
     return { resultType, rows: [] };
   }
 
-  // ── Find the best table ───────────────────────────────────────
-  const { idx, score } = await findBestTableIdx(page);
-  dbg(`  Best table idx=${idx} score=${score}`);
+  // ── All table work in ONE evaluate — avoids index mismatch ───
+  const extracted = await page.evaluate(() => {
+    // ONLY direct-child <tr> of a table — never rows from nested tables
+    function directRows(table) {
+      const rows = [];
+      for (const el of table.children) {
+        if (el.tagName === "TR") rows.push(el);
+        else if (["TBODY", "THEAD", "TFOOT"].includes(el.tagName)) {
+          for (const tr of el.children) {
+            if (tr.tagName === "TR") rows.push(tr);
+          }
+        }
+      }
+      return rows;
+    }
 
-  if (idx === -1 || score < 10) {
-    dbg("  No suitable table found");
+    function cellTexts(tr) {
+      return Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
+        .map(c => (c.innerText || c.textContent || "").trim());
+    }
+
+    let bestTable = null, bestScore = 0;
+
+    for (const t of document.querySelectorAll("table")) {
+      const rows = directRows(t);
+      let dataCount = 0, headerFound = false;
+
+      for (const tr of rows) {
+        const c = cellTexts(tr);
+        if (c.filter(x => x).length < 3) continue;
+        if (/^\d+$/.test(c[0])) dataCount++;
+        // Header: first cell = "Pos" exactly
+        if (/^pos$/i.test(c[0]) && c.length >= 4) headerFound = true;
+      }
+
+      const score = dataCount * 10 + (headerFound ? 100 : 0);
+      if (score > bestScore) { bestScore = score; bestTable = t; }
+    }
+
+    if (!bestTable || bestScore < 10) return null;
+
+    // Extract DIRECT rows only from best table
+    const rawRows = directRows(bestTable)
+      .map(tr => cellTexts(tr))
+      .filter(r => r.filter(c => c.length > 0).length >= 3);
+
+    // Header: first row where first cell = "Pos"
+    const headerRow = rawRows.find(r => /^pos$/i.test(r[0]) && r.length >= 4) || null;
+    // Data rows: first cell is a plain integer
+    const dataRows  = rawRows.filter(r => /^\d+$/.test(r[0]));
+
+    return { headerRow, dataRows, score: bestScore };
+  });
+
+  dbg(`  Extracted: score=${extracted?.score} header=${(extracted?.headerRow||[]).slice(0,5).join("|")} dataRows=${extracted?.dataRows?.length}`);
+
+  if (!extracted || !extracted.dataRows.length) {
     return { resultType, rows: [] };
   }
 
-  const tables = await page.$$("table");
-  if (!tables[idx]) return { resultType, rows: [] };
-
-  // ── Read rows using :scope to avoid nested table bleed ────────
-  const rawRows = await tables[idx].$$eval("tr", trs =>
-    trs.map(tr => {
-      return Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
-        .map(c => (c.innerText || c.textContent || "").trim());
-    }).filter(r => r.filter(c => c.length > 0).length >= 3)
-  );
-
-  dbg(`  Raw rows: ${rawRows.length}`);
-
-  // ── Find header row ───────────────────────────────────────────
-  const headerRow =
-    rawRows.find(r => /^pos$/i.test(r[0]) && r.length >= 4) ||
-    rawRows.find(r => r.some(c => /^pos$/i.test(c)) && r.some(c => /^(nr|num)$/i.test(c)));
-
-  dbg(`  Header: ${(headerRow || []).slice(0, 8).join(" | ")}`);
-
-  // ── Data rows: first cell is a plain number (position) ────────
-  const dataRows = rawRows.filter(r => /^\d+$/.test((r[0] || "").trim()));
-  dbg(`  Data rows: ${dataRows.length}`);
-
-  if (!dataRows.length) return { resultType, rows: [] };
-
-  const colMap = detectColumns(headerRow || []);
+  const colMap = detectColumns(extracted.headerRow || []);
   dbg(`  colMap: ${JSON.stringify(colMap)}`);
 
-  const rows = dataRows.map(cells => parseRow(cells, colMap, resultType)).filter(Boolean);
+  const rows = extracted.dataRows.map(cells => parseRow(cells, colMap, resultType)).filter(Boolean);
   dbg(`  Parsed rows: ${rows.length}`);
 
   return { resultType, rows };
@@ -416,9 +443,18 @@ function parseRow(cells, colMap, resultType) {
     return (idx != null && cells[idx] != null) ? String(cells[idx]).trim() : def;
   };
 
-  const posVal = parseInt(get("pos"), 10);
+  // Pos is ALWAYS cells[0] for data rows (they were pre-filtered to start with a digit).
+  // Also accept colMap.pos as a fallback, but only if it gives a valid integer.
+  let posVal = parseInt(cells[0], 10);
+  if (isNaN(posVal) && colMap.pos != null) posVal = parseInt(get("pos"), 10);
   if (isNaN(posVal)) return null;
 
+  // Nr: try colMap first, then heuristic (second cell if it looks like a bib number)
+  let nrRaw = get("nr");
+  if (!nrRaw && cells[1] && /^\d+$/.test(cells[1])) nrRaw = cells[1];
+  const nr = parseInt(nrRaw, 10) || null;
+
+  // Rider name
   const riderRaw = get("rider", "");
   let firstName = "", lastName = riderRaw;
   if (riderRaw.includes(",")) {
@@ -431,6 +467,8 @@ function parseRow(cells, colMap, resultType) {
     lastName  = p.slice(1).join(" ");
   }
 
+  if (!nr && !riderRaw) return null;
+
   const sectors = colMap.s1 != null ? [
     [colMap.s1, colMap.s2, colMap.s3, colMap.s4]
       .filter(i => i != null)
@@ -441,9 +479,6 @@ function parseRow(cells, colMap, resultType) {
   const lapTimes = (colMap.lapCols || [])
     .map(i => parseTime(cells[i]))
     .filter(v => v !== null && v > 0);
-
-  const nr = parseInt(get("nr"), 10) || null;
-  if (!nr && !riderRaw) return null;
 
   return {
     pos:        posVal,
