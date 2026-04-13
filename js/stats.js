@@ -1239,6 +1239,19 @@ function initEvents() {
     });
   });
 
+  // Refresh button (force re-fetch data)
+  const btnRefresh = document.getElementById("btn-refresh");
+  if (btnRefresh) {
+    btnRefresh.addEventListener("click", async () => {
+      btnRefresh.textContent = "↻ ...";
+      btnRefresh.disabled = true;
+      const ok = await autoFetchData().catch(() => false);
+      btnRefresh.textContent = "↻ REFRESH";
+      btnRefresh.disabled = false;
+      if (!ok) alert("Aucun fichier data/results.json trouvé.\nLancez le scraper d\'abord.");
+    });
+  }
+
   // Drag-to-scroll on left panel for rider list (desktop UX)
   const riderListEl = document.getElementById("rider-list");
   let isDragging = false, startY, scrollTop;
@@ -1256,15 +1269,46 @@ function initEvents() {
    INIT
 ══════════════════════════════════════════ */
 
+function init() {
+  // Load chart defaults from Chart.js
+  Chart.defaults.font.family = "'Barlow Condensed', sans-serif";
+  Chart.defaults.color = "#4e566e";
+
+  // Register datalabels globally (but each chart opt-in via plugins: [ChartDataLabels])
+  // We DON'T register globally to avoid breaking charts that don't use it
+
+  dbLoad();
+  renderSessionList();
+  populateSessionSelect();
+  initEvents();
+
+  // Auto-activate last session if available
+  const keys = Object.keys(S.db);
+  if (keys.length) sessionActivate(keys[keys.length - 1]);
+
+  // Default col-adv hidden
+  S.colVis.adv = false;
+  document.querySelector(".col-tog[data-col='adv']").classList.remove("active");
+  applyColVis();
+}
+
 /* ══════════════════════════════════════════
-   AUTO-FETCH DATA
-   Charge automatiquement data/results.json
-   (GitHub Pages — généré par GitHub Actions)
+   AUTO-FETCH DATA — charge data/results.json au démarrage
+   Essaie plusieurs chemins pour fonctionner
+   aussi bien en local qu'en GitHub Pages.
 ══════════════════════════════════════════ */
 
-async function autoFetchData() {
-  const candidates = ["data/results.json", "results.json"];
-  for (const dataPath of candidates) {
+const DATA_PATHS = [
+  "data/results.json",       // GitHub Pages (root)
+  "../data/results.json",    // Local (HTML dans un sous-dossier ex: Stats/)
+  "../../data/results.json", // Local (deux niveaux au-dessus)
+  "results.json",            // Fallback même dossier
+];
+
+async function autoFetchData(forcedPath) {
+  const paths = forcedPath ? [forcedPath] : DATA_PATHS;
+
+  for (const dataPath of paths) {
     try {
       const res = await fetch(dataPath, { cache: "no-cache" });
       if (!res.ok) continue;
@@ -1272,9 +1316,9 @@ async function autoFetchData() {
       if (!data) continue;
 
       let sessions = [];
-      if (data.sessions && Array.isArray(data.sessions))          sessions = data.sessions;
-      else if (data.meta && data.riders)                          sessions = [data];
-      else if (Array.isArray(data) && data[0]?.meta)              sessions = data;
+      if (data.sessions && Array.isArray(data.sessions))   sessions = data.sessions;
+      else if (data.meta && data.riders)                   sessions = [data];
+      else if (Array.isArray(data) && data[0]?.meta)       sessions = data;
 
       if (!sessions.length) continue;
 
@@ -1282,10 +1326,10 @@ async function autoFetchData() {
       for (const s of sessions) {
         if (!s.meta)   s.meta   = {};
         if (!s.riders) s.riders = [];
-        // Parse string lap times to numbers
+        // Normalize lap times to numbers
         s.riders = s.riders.map(r => ({
           ...r,
-          lapTimes: (r.lapTimes || []).map(v => typeof v === "string" ? parseTime(v) : v).filter(v => v != null),
+          lapTimes: (r.lapTimes || []).map(v => typeof v === "string" ? parseTime(v) : v).filter(v => v != null && v > 0),
           bestLap:  r.bestLap ? (typeof r.bestLap === "string" ? parseTime(r.bestLap) : r.bestLap) : null,
         }));
         lastKey = sessionStore(s);
@@ -1297,11 +1341,21 @@ async function autoFetchData() {
 
       setTicker(`✓ Auto-chargé : ${sessions.length} session(s) depuis ${dataPath}`);
       console.log(`[MXGP] Auto-fetch OK: ${sessions.length} sessions from "${dataPath}"`);
+
+      // Show success in the no-data-msg if it's still visible
+      const msg = document.getElementById("no-data-msg");
+      if (msg && msg.style.display !== "none") {
+        const lt = msg.querySelector(".load-txt");
+        const ls = msg.querySelector(".load-sub");
+        if (lt) lt.textContent = `✓ ${sessions.length} SESSION(S) CHARGÉE(S)`;
+        if (ls) ls.textContent = `Auto-fetch · ${dataPath}`;
+      }
       return true;
     } catch (e) {
-      console.log(`[MXGP] Auto-fetch skipped (${dataPath}):`, e.message);
+      console.log(`[MXGP] autoFetch skip (${dataPath}): ${e.message}`);
     }
   }
+  console.warn("[MXGP] autoFetch: no data found at any candidate path");
   return false;
 }
 
@@ -1314,19 +1368,15 @@ function init() {
   populateSessionSelect();
   initEvents();
 
-  // Auto-activate last local session if available
   const keys = Object.keys(S.db);
   if (keys.length) sessionActivate(keys[keys.length - 1]);
 
-  // Default col-adv hidden
   S.colVis.adv = false;
   document.querySelector(".col-tog[data-col='adv']").classList.remove("active");
   applyColVis();
 
-  // Auto-fetch remote data AFTER local sessions loaded
-  // (will override display if remote data is fresher)
+  // Auto-fetch remote/local data on startup
   autoFetchData().catch(e => console.warn("[MXGP] autoFetch error:", e));
 }
 
-// Wait for Chart.js to load
 window.addEventListener("load", init);

@@ -1,21 +1,28 @@
 /**
  * ═══════════════════════════════════════════════════════════
- *  MXGP Results Scraper — scraper.js  (v2.0 — fixed)
+ *  MXGP Results Scraper — scraper.js  v3.0 (bug-fixed)
  *  Playwright · ASP.NET WebForms (ViewState + postback)
+ *
+ *  Fixes vs v2:
+ *   - Use ":scope > td, :scope > th" everywhere → no nested-table bleed
+ *   - Dedicated Analysis parser (per-rider blocks with inner tables)
+ *   - Skip Lap Chart (P/L position matrix, not times), WC, Manufacturers
+ *   - detectColumns rewritten for exact cell names
+ *   - parseTime handles "1:45.0902" (ms + lap-nr concatenated)
  *
  *  Usage :
  *    npm install playwright
  *    npx playwright install chromium
- *    node scraper.js [--year 2026] [--cat MXGP] [--out results.json]
+ *    node scraper.js [--year 2026] [--cat MXGP] [--out ../data/results.json]
  *
  *  Options :
- *    --year   Année cible (défaut: année en cours). "all" = toutes les années.
+ *    --year   Année cible (défaut: année en cours). "all" = toutes.
  *    --cat    Catégorie filtre ex: "MXGP" (défaut: toutes)
- *    --event  Filtre sur le nom de l'événement (sous-chaîne, insensible casse)
+ *    --event  Filtre sur le nom de l'événement (sous-chaîne)
  *    --out    Fichier de sortie (défaut: mxgp_results_YYYY-MM-DD.json)
- *    --slow   Délai entre requêtes en ms (défaut: 1000)
+ *    --slow   Délai entre requêtes ms (défaut: 1000)
  *    --csv    Exporter aussi en CSV
- *    --debug  Mode verbose
+ *    --debug  Mode verbose + dump HTML
  * ═══════════════════════════════════════════════════════════
  */
 
@@ -55,205 +62,324 @@ const warn = (...a) => console.warn("[WARN]", ...a);
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-/** Parse time string "M:SS.mmm" or "MM:SS.mmm" to seconds */
+/**
+ * Parse time string to seconds.
+ * Handles: "M:SS.mmm", "M:SS.mmmN" (extra digit = lap nr), "SS.mmm"
+ */
 function parseTime(s) {
   if (s == null) return null;
   if (typeof s === "number") return isNaN(s) ? null : s;
   const str = String(s).trim();
   if (!str || str === "—" || str === "-" || str === "DNF" || str === "DNS") return null;
-  // M:SS.mmm
-  let m = str.match(/^(\d+):(\d{2})[.,](\d+)$/);
+
+  // "M:SS.mmm" — capture exactly 1-3 ms digits (ignore any trailing digit = lap nr)
+  let m = str.match(/^(\d+):(\d{2})[.,](\d{1,3})/);
   if (m) return parseInt(m[1]) * 60 + parseInt(m[2]) + parseFloat("0." + m[3]);
-  // SS.mmm
+
+  // "0:SS.mmm" minute part = 0
+  m = str.match(/^0:(\d{2})[.,](\d{1,3})/);
+  if (m) return parseInt(m[1]) + parseFloat("0." + m[2]);
+
+  // Pure decimal "SS.mmm"
   m = str.match(/^(\d+)[.,](\d+)$/);
   if (m) return parseFloat(str.replace(",", "."));
+
   return null;
 }
 
-/**
- * Get options from a <select> element.
- * Tries both exact ID and partial ID match (ASP.NET mangled IDs).
- */
+/** Get options from a <select> — tries multiple selector patterns */
 async function getOptions(page, selectBaseName) {
-  // Try multiple selectors: exact, suffix match, name match
   const selectors = [
     `#${selectBaseName}`,
     `[id$='${selectBaseName}']`,
     `[id*='${selectBaseName}']`,
+    `select[name='${selectBaseName}']`,
     `select[name$='${selectBaseName}']`,
-    `select[name*='${selectBaseName}']`,
   ];
-
   for (const sel of selectors) {
     try {
       const opts = await page.$$eval(`${sel} option`, opts =>
         opts.map(o => ({ value: o.value, text: o.text.trim() }))
           .filter(o => o.value && o.value !== "0" && o.value.trim() !== "")
       );
-      if (opts.length) {
-        dbg(`  getOptions(${selectBaseName}) via "${sel}" → ${opts.length} opts`);
-        return opts;
-      }
+      if (opts.length) { dbg(`  getOptions(${selectBaseName}) via "${sel}" → ${opts.length}`); return opts; }
     } catch { /* try next */ }
   }
-  dbg(`  getOptions(${selectBaseName}) → NOT FOUND with any selector`);
+  dbg(`  getOptions(${selectBaseName}) → NOT FOUND`);
   return [];
 }
 
-/**
- * Select option and wait for postback.
- * Uses flexible selector matching.
- */
+/** Select value and wait for ASP.NET postback */
 async function selectAndWait(page, selectBaseName, value) {
   dbg(`  select ${selectBaseName} = "${value}"`);
   const selectors = [
     `#${selectBaseName}`,
     `[id$='${selectBaseName}']`,
     `[id*='${selectBaseName}']`,
-    `select[name$='${selectBaseName}']`,
+    `select[name='${selectBaseName}']`,
   ];
-
-  let selected = false;
   for (const sel of selectors) {
     try {
       await page.selectOption(sel, value, { timeout: 5000 });
-      selected = true;
-      dbg(`    → selected via "${sel}"`);
+      dbg(`    → via "${sel}"`);
       break;
     } catch { /* try next */ }
   }
-
-  if (!selected) {
-    warn(`  Could not select "${selectBaseName}" = "${value}"`);
-    return;
-  }
-
-  // Wait for postback / networkidle
-  try {
-    await page.waitForLoadState("networkidle", { timeout: TIMEOUT });
-  } catch {
-    await sleep(1500);
-  }
+  try { await page.waitForLoadState("networkidle", { timeout: TIMEOUT }); }
+  catch { await sleep(1500); }
   await sleep(SLOW_MS);
 }
 
 /* ══════════════════════════════════════════
-   TABLE PARSING
+   TABLE PARSING  (v3 — scoped cell selection)
 ══════════════════════════════════════════ */
 
 /**
- * Parse the results table currently displayed on the page.
- * Uses a multi-pass strategy: named table → biggest table → any table.
+ * Find the index of the most "data-like" table on the page.
+ * Evaluation runs inside the browser with :scope > td/th (no nested bleed).
  */
-async function parseResultTable(page, resultType) {
-  // Dump HTML for debugging
-  if (DEBUG) {
-    const html = await page.content();
-    fs.writeFileSync(`debug_${resultType.replace(/\W/g,"_")}.html`, html);
-  }
+async function findBestTableIdx(page) {
+  return page.evaluate(() => {
+    const tables = Array.from(document.querySelectorAll("table"));
+    let bestIdx = -1, bestScore = 0;
 
-  // ── Pass 1: find table rows across multiple possible selectors ──
-  const tableSelectorCandidates = [
-    "table.list_table",
-    "table.results-table",
-    "table#tblResults",
-    "table[id*='Result']",
-    "table[id*='Grid']",
-    "table[id*='List']",
-    ".maintable table",
-    ".results table",
-    "#results table",
-    "table",   // fallback: any table
-  ];
+    tables.forEach((t, i) => {
+      const rows = Array.from(t.querySelectorAll("tr"));
+      let dataCount = 0, headerFound = false;
 
-  let rawRows = [];
+      for (const tr of rows) {
+        const cells = Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
+          .map(c => (c.innerText || c.textContent || "").trim());
 
-  for (const tsel of tableSelectorCandidates) {
-    try {
-      const rows = await page.$$eval(`${tsel} tr`, (trs) =>
-        trs.map(tr => {
-          const cells = Array.from(tr.querySelectorAll("td, th"))
-            .map(c => (c.innerText || c.textContent || "").trim());
-          return cells;
-        }).filter(row => row.length >= 3)
-      );
-      if (rows.length > 2) {
-        dbg(`  Table via "${tsel}": ${rows.length} rows`);
-        rawRows = rows;
-        break;
+        if (cells.length < 3) continue;
+        if (/^\d+$/.test(cells[0])) dataCount++;
+        if (/^pos$/i.test(cells[0]) && /^(nr|num|#|no)$/i.test(cells[1] || "")) headerFound = true;
+        if (/^pos$/i.test(cells[0]) && /^rider$/i.test(cells[2] || ""))         headerFound = true;
       }
-    } catch { /* try next */ }
-  }
 
-  if (!rawRows.length) {
-    dbg("  No table rows found on page");
-    return { resultType, rows: [] };
-  }
+      const score = dataCount * 10 + (headerFound ? 100 : 0);
+      if (score > bestScore) { bestScore = score; bestIdx = i; }
+    });
 
-  // ── Pass 2: identify header row ──
-  const headerRow = rawRows.find(r =>
-    r.some(c => /pos|position|#|nr|nr\.|rider|name|pilot|time|laps|lap|s1|sector/i.test(c))
-  );
+    return { idx: bestIdx, score: bestScore };
+  });
+}
 
-  // ── Pass 3: find data rows (first cell is a number = position) ──
-  const dataRows = rawRows.filter(r => {
-    const first = (r[0] || "").trim();
-    // Accept "1", "2", ..., "DNF", "DNS", "DSQ" as valid first cells
-    return /^\d+$/.test(first) || /^(DNF|DNS|DSQ|RET|NC)$/i.test(first);
+/**
+ * Parse the per-rider Analysis table.
+ * Structure: outer table whose <td> cells each contain an inner table
+ * with per-lap rows (Lap | Laptime | S1 | S2 | S3 | S4).
+ */
+async function parseAnalysisTable(page, resultType) {
+  // Step 1: collect raw blocks inside the browser
+  const blocks = await page.evaluate(() => {
+    // Leaf tables = tables that contain no nested tables = per-rider lap tables
+    const allTables = Array.from(document.querySelectorAll("table"));
+    const leafTables = allTables.filter(t => t.querySelectorAll("table").length === 0);
+
+    // Keep only tables whose first row looks like a lap-data header
+    const lapTables = leafTables.filter(t => {
+      const rows = Array.from(t.querySelectorAll("tr"));
+      if (rows.length < 3) return false;
+      const hText = (rows[0].innerText || rows[0].textContent || "").trim().toLowerCase();
+      return (hText.includes("lap") && hText.includes("time")) ||
+              hText.includes("laptime") ||
+             (hText.includes("lap") && hText.includes("section"));
+    });
+
+    return lapTables.map(t => {
+      // Rider info is the text in the parent <td>, minus the table's own content
+      const parentTd = t.closest("td");
+      let riderInfo = "";
+      if (parentTd) {
+        const clone = parentTd.cloneNode(true);
+        clone.querySelectorAll("table").forEach(x => x.remove());
+        riderInfo = (clone.innerText || clone.textContent || "")
+          .replace(/\s+/g, " ").trim();
+      }
+
+      // Rows with scoped cells (no nested bleed)
+      const rows = Array.from(t.querySelectorAll("tr")).map(tr =>
+        Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
+          .map(c => (c.innerText || c.textContent || "").trim())
+      ).filter(r => r.length >= 2);
+
+      return { riderInfo, rows };
+    });
   });
 
-  dbg(`  → headerRow cells: ${headerRow?.slice(0,8).join(" | ")}`);
-  dbg(`  → dataRows: ${dataRows.length}`);
+  dbg(`  Analysis: found ${blocks.length} rider blocks`);
 
-  if (!dataRows.length) {
-    // Last resort: rows with enough cells where one column looks like a time
-    const altRows = rawRows.filter(r =>
-      r.length >= 3 &&
-      r.some(c => /^\d+:\d{2}[.,]\d+$/.test(c))
-    );
-    if (altRows.length) {
-      dbg(`  → Using alt rows (time-pattern match): ${altRows.length}`);
-      // treat first altRow as potential header, rest as data
-      const potentialData = altRows.filter(r => /^\d+$/.test((r[0] || "").trim()));
-      if (potentialData.length) {
-        const colMap = detectColumns(headerRow || altRows[0] || []);
-        const parsed = potentialData.map(c => parseRow(c, colMap, resultType)).filter(Boolean);
-        return { resultType, rows: parsed };
+  const BIKES = ["KTM","HUSQVARNA","HUS","HONDA","HON","KAWASAKI","KAW",
+                 "YAMAHA","YAM","DUCATI","DUC","TRIUMPH","TRI","FANTIC","FAN",
+                 "BETA","BET","TM","GAS GAS","GASGAS","GAS","SHERCO"];
+
+  const parsedRiders = [];
+
+  for (const { riderInfo, rows } of blocks) {
+    // Lap rows = first cell is a lap number
+    const lapRows = rows.filter(r => /^\d+$/.test(r[0]));
+    if (!lapRows.length) continue;
+
+    // Parse rider info string: "5 Coenen Lucas KTM" or "5 Coenen Lucas\nKTM"
+    const tokens = riderInfo.replace(/[\n\r]+/g, " ").trim().split(/\s+/).filter(Boolean);
+    const nr = parseInt(tokens[0]) || null;
+
+    let bike = null;
+    let nameTokens = tokens.slice(1);
+    // Bike is usually the last token
+    for (let i = nameTokens.length - 1; i >= 0; i--) {
+      const up = nameTokens[i].toUpperCase();
+      if (BIKES.some(b => b.split(" ")[0] === up || up === b)) {
+        bike = nameTokens[i];
+        nameTokens = nameTokens.slice(0, i);
+        break;
       }
     }
+
+    const firstName = nameTokens[0] || "";
+    const lastName  = nameTokens.slice(1).join(" ");
+
+    const lapTimes = [];
+    const sectors  = [];
+
+    for (const row of lapRows) {
+      const lt = parseTime(row[1]);
+      if (lt !== null && lt > 0) lapTimes.push(lt);
+
+      const sv = [2, 3, 4, 5].map(i => parseTime(row[i])).filter(v => v !== null && v > 0);
+      if (sv.length >= 2) sectors.push(sv);
+    }
+
+    if (!lapTimes.length) continue;
+
+    parsedRiders.push({
+      pos: null,
+      nr,
+      firstName,
+      lastName,
+      bike,
+      lapTimes,
+      sectors,
+      bestLap:    Math.min(...lapTimes),
+      laps:       lapTimes.length,
+      _resultType: resultType,
+    });
+  }
+
+  dbg(`  Analysis: ${parsedRiders.length} riders parsed`);
+  return { resultType, rows: parsedRiders };
+}
+
+/**
+ * Parse the main results table currently displayed on the page.
+ * Returns { resultType, rows: [...] }
+ */
+async function parseResultTable(page, resultType) {
+  if (DEBUG) {
+    const html = await page.content();
+    const fname = `debug_${resultType.replace(/\W+/g, "_")}.html`;
+    fs.writeFileSync(fname, html);
+    dbg(`  HTML dumped to ${fname}`);
+  }
+
+  const rtLower = resultType.toLowerCase();
+
+  // ── Special parser for Analysis ──────────────────────────────
+  if (rtLower.includes("analysis")) {
+    return parseAnalysisTable(page, resultType);
+  }
+
+  // ── Skip position matrix / cumulative tables ──────────────────
+  if (rtLower.includes("lap chart")) {
+    dbg("  Skip Lap Chart (P/L position matrix — lap times come from Analysis)");
     return { resultType, rows: [] };
   }
+  if (rtLower.includes("world championship") || rtLower.includes("manufacturers")) {
+    dbg(`  Skip cumulative: ${resultType}`);
+    return { resultType, rows: [] };
+  }
+
+  // ── Find the best table ───────────────────────────────────────
+  const { idx, score } = await findBestTableIdx(page);
+  dbg(`  Best table idx=${idx} score=${score}`);
+
+  if (idx === -1 || score < 10) {
+    dbg("  No suitable table found");
+    return { resultType, rows: [] };
+  }
+
+  const tables = await page.$$("table");
+  if (!tables[idx]) return { resultType, rows: [] };
+
+  // ── Read rows using :scope to avoid nested table bleed ────────
+  const rawRows = await tables[idx].$$eval("tr", trs =>
+    trs.map(tr => {
+      return Array.from(tr.querySelectorAll(":scope > td, :scope > th"))
+        .map(c => (c.innerText || c.textContent || "").trim());
+    }).filter(r => r.filter(c => c.length > 0).length >= 3)
+  );
+
+  dbg(`  Raw rows: ${rawRows.length}`);
+
+  // ── Find header row ───────────────────────────────────────────
+  const headerRow =
+    rawRows.find(r => /^pos$/i.test(r[0]) && r.length >= 4) ||
+    rawRows.find(r => r.some(c => /^pos$/i.test(c)) && r.some(c => /^(nr|num)$/i.test(c)));
+
+  dbg(`  Header: ${(headerRow || []).slice(0, 8).join(" | ")}`);
+
+  // ── Data rows: first cell is a plain number (position) ────────
+  const dataRows = rawRows.filter(r => /^\d+$/.test((r[0] || "").trim()));
+  dbg(`  Data rows: ${dataRows.length}`);
+
+  if (!dataRows.length) return { resultType, rows: [] };
 
   const colMap = detectColumns(headerRow || []);
   dbg(`  colMap: ${JSON.stringify(colMap)}`);
 
   const rows = dataRows.map(cells => parseRow(cells, colMap, resultType)).filter(Boolean);
+  dbg(`  Parsed rows: ${rows.length}`);
+
   return { resultType, rows };
 }
 
-/** Detect column indices from header row */
+/* ══════════════════════════════════════════
+   COLUMN DETECTION
+══════════════════════════════════════════ */
+
+/**
+ * Map column header names to indices.
+ * Normalises to lowercase letters+digits only for matching.
+ *
+ * Expected Classification headers (in order):
+ *   Pos · Nr · Rider · Nat. · Fed. · Bike · Time · laps ·
+ *   Diff. First · Diff. Prev. · Bestlaptime · in lap · Speed
+ */
 function detectColumns(header) {
   const map = {};
   header.forEach((h, i) => {
-    const norm = (h || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (/^pos(ition)?$/.test(norm))                   map.pos = i;
-    else if (/^(nr|nb|num|number|no|bib|#)$/.test(norm)) map.nr = i;
-    else if (/rider|name|pilot|firstname|lastName|coureur/.test(norm) && map.rider == null) map.rider = i;
-    else if (/^nat(ionality)?$|^country$/.test(norm)) map.nat = i;
-    else if (/bike|brand|moto|marque/.test(norm))     map.bike = i;
-    else if (/totaltime|racetime|^time$|total$/.test(norm)) map.totalTime = i;
-    else if (/^laps?$|^tours?$/.test(norm))           map.laps = i;
-    else if (/^points?$|^pts$/.test(norm))            map.points = i;
-    else if (/diff.*first|gap.*lead|behind/.test(norm)) map.diffFirst = i;
-    else if (/diff.*prev|prev$|interval/.test(norm))  map.diffPrev = i;
-    else if (/bestlap|best.*lap|fastest/.test(norm))  map.bestLap = i;
-    else if (/inlap|in.*lap|lap.*num|best.*in/.test(norm)) map.bestLapNum = i;
-    else if (/^s1$|sector.*1|^1$/.test(norm) && map.s1 == null) map.s1 = i;
-    else if (/^s2$|sector.*2/.test(norm) && map.s2 == null)     map.s2 = i;
-    else if (/^s3$|sector.*3/.test(norm) && map.s3 == null)     map.s3 = i;
-    else if (/^s4$|sector.*4/.test(norm) && map.s4 == null)     map.s4 = i;
-    else if (/grid|start|grille|depart/.test(norm))   map.gridPos = i;
-    else if (/laptime|lap\d+|^l\d+$/.test(norm)) {
+    const n = (h || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    if      (n === "pos" || n === "position")                    map.pos = i;
+    else if (/^(nr|nb|num|number|no|bib)$/.test(n))              map.nr  = i;
+    else if (/^(rider|name|pilot)$/.test(n) && map.rider == null) map.rider = i;
+    else if (/^(nat|nationality|country)$/.test(n))              map.nat  = i;
+    // "fed" / "federation" — deliberately ignored
+    else if (/^(bike|brand|moto|marque|make)$/.test(n))          map.bike = i;
+    else if (/^(time|totaltime|racetime)$/.test(n))              map.totalTime = i;
+    else if (/^(laps|tours|nlaps)$/.test(n))                     map.laps = i;
+    else if (/^(points|pts|pt)$/.test(n))                        map.points = i;
+    else if (/difffirst|gapfirst|gapleader/.test(n))             map.diffFirst = i;
+    else if (/diffprev|interval/.test(n))                        map.diffPrev  = i;
+    else if (/bestlaptime|fastestlap/.test(n))                   map.bestLap   = i;
+    else if (/inlap/.test(n))                                    map.bestLapNum = i;
+    else if (/^s1$|^sector1$|^section1$/.test(n))                map.s1 = i;
+    else if (/^s2$|^sector2$|^section2$/.test(n))                map.s2 = i;
+    else if (/^s3$|^sector3$|^section3$/.test(n))                map.s3 = i;
+    else if (/^s4$|^sector4$|^section4$/.test(n))                map.s4 = i;
+    else if (/^(grid|start|grille|startpos)$/.test(n))           map.gridPos = i;
+    else if (/^(lap\d+|l\d+)$/.test(n)) {
       if (!map.lapCols) map.lapCols = [];
       map.lapCols.push(i);
     }
@@ -261,63 +387,57 @@ function detectColumns(header) {
   return map;
 }
 
-/** Parse a data row into a rider object */
+/** Parse one data row into a rider object */
 function parseRow(cells, colMap, resultType) {
   const get = (key, def = null) => {
     const idx = colMap[key];
     return (idx != null && cells[idx] != null) ? String(cells[idx]).trim() : def;
   };
 
-  const posRaw = (get("pos") || "").trim();
-  const pos = parseInt(posRaw, 10);
-  // Accept DNF/DNS etc. as pos = 99+
-  const posVal = isNaN(pos) ? (/^(DNF|DNS|DSQ|RET|NC)$/i.test(posRaw) ? 99 : null) : pos;
-  if (posVal === null) return null;
+  const posVal = parseInt(get("pos"), 10);
+  if (isNaN(posVal)) return null;
 
-  // Rider name: try splitting "FIRSTNAME LASTNAME" or "LASTNAME, FIRSTNAME"
   const riderRaw = get("rider", "");
   let firstName = "", lastName = riderRaw;
   if (riderRaw.includes(",")) {
-    const parts = riderRaw.split(",").map(s => s.trim());
-    lastName  = parts[0];
-    firstName = parts[1] || "";
+    const p = riderRaw.split(",").map(s => s.trim());
+    lastName  = p[0];
+    firstName = p[1] || "";
   } else if (riderRaw.includes(" ")) {
-    const parts = riderRaw.trim().split(/\s+/);
-    firstName = parts[0];
-    lastName  = parts.slice(1).join(" ");
+    const p = riderRaw.trim().split(/\s+/);
+    firstName = p[0];
+    lastName  = p.slice(1).join(" ");
   }
 
-  // Sector times
-  const sectors = (colMap.s1 != null) ? [
-    [
-      parseTime(cells[colMap.s1]),
-      colMap.s2 != null ? parseTime(cells[colMap.s2]) : null,
-      colMap.s3 != null ? parseTime(cells[colMap.s3]) : null,
-      colMap.s4 != null ? parseTime(cells[colMap.s4]) : null,
-    ].filter(v => v != null)
+  const sectors = colMap.s1 != null ? [
+    [colMap.s1, colMap.s2, colMap.s3, colMap.s4]
+      .filter(i => i != null)
+      .map(i => parseTime(cells[i]))
+      .filter(v => v !== null)
   ] : [];
 
-  // Lap times (if lap chart)
-  const lapTimes = (colMap.lapCols || []).map(i => parseTime(cells[i])).filter(v => v != null);
+  const lapTimes = (colMap.lapCols || [])
+    .map(i => parseTime(cells[i]))
+    .filter(v => v !== null && v > 0);
 
   const nr = parseInt(get("nr"), 10) || null;
-  if (!nr && !riderRaw) return null; // skip empty rows
+  if (!nr && !riderRaw) return null;
 
   return {
-    pos: posVal,
+    pos:        posVal,
     nr,
-    firstName: firstName.trim(),
-    lastName:  lastName.trim(),
-    nat:       get("nat"),
-    bike:      get("bike"),
-    totalTime: get("totalTime"),
-    laps:      parseInt(get("laps"), 10) || null,
-    bestLap:   parseTime(get("bestLap")),
-    bestLapNum:parseInt(get("bestLapNum"), 10) || null,
-    diffFirst: get("diffFirst"),
-    diffPrev:  get("diffPrev"),
-    gridPos:   parseInt(get("gridPos"), 10) || null,
-    points:    parseInt(get("points"), 10) || (PTS_SCALE[posVal - 1] || 0),
+    firstName:  firstName.trim(),
+    lastName:   lastName.trim(),
+    nat:        get("nat"),
+    bike:       get("bike"),
+    totalTime:  get("totalTime"),
+    laps:       parseInt(get("laps"), 10) || null,
+    bestLap:    parseTime(get("bestLap")),
+    bestLapNum: parseInt(get("bestLapNum"), 10) || null,
+    diffFirst:  get("diffFirst"),
+    diffPrev:   get("diffPrev"),
+    gridPos:    parseInt(get("gridPos"), 10) || null,
+    points:     parseInt(get("points"), 10) || (PTS_SCALE[posVal - 1] || 0),
     sectors,
     lapTimes,
     _resultType: resultType,
@@ -328,47 +448,51 @@ function parseRow(cells, colMap, resultType) {
    MERGE RESULT TYPES
 ══════════════════════════════════════════ */
 
+/**
+ * Merge Classification + Analysis (+ optional Grid) into one riders array.
+ * Keyed by rider number.
+ */
 function mergeResults(resultSets) {
   const byNr = {};
 
   for (const { resultType, rows } of resultSets) {
+    const rtl = resultType.toLowerCase();
+
     for (const row of rows) {
       const key = row.nr != null ? String(row.nr) : `${row.firstName}_${row.lastName}`;
-      if (!byNr[key]) {
-        byNr[key] = { ...row, sectors: [], lapTimes: [] };
-      }
-      const existing = byNr[key];
+      if (!byNr[key]) byNr[key] = { sectors: [], lapTimes: [], ...row };
+      const ex = byNr[key];
 
-      const rtLower = resultType.toLowerCase();
-
-      // Lap times come from "Lap Chart" or "Lap Times"
-      if ((rtLower.includes("lap chart") || rtLower.includes("lap time") || rtLower.includes("lapchart"))
-          && row.lapTimes?.length) {
-        existing.lapTimes = row.lapTimes;
+      // Analysis → lap times and sectors
+      if (rtl.includes("analysis")) {
+        if (row.lapTimes?.length) ex.lapTimes = row.lapTimes;
+        if (row.sectors?.length)  ex.sectors  = row.sectors;
+        if (row.bike && !ex.bike) ex.bike = row.bike;
       }
 
-      // Best lap
-      if (row.bestLap && (!existing.bestLap || row.bestLap < existing.bestLap)) {
-        existing.bestLap    = row.bestLap;
-        existing.bestLapNum = row.bestLapNum;
+      // Classification → authoritative race fields
+      if (rtl.includes("classification") && !rtl.includes("world") && !rtl.includes("manufacturers") && !rtl.includes("gp")) {
+        if (row.pos != null)       ex.pos       = row.pos;
+        if (row.totalTime)         ex.totalTime = row.totalTime;
+        if (row.laps)              ex.laps      = row.laps;
+        if (row.nat && !ex.nat)    ex.nat       = row.nat;
+        if (row.bike && !ex.bike)  ex.bike      = row.bike;
+        if (row.diffFirst)         ex.diffFirst = row.diffFirst;
+        if (row.points)            ex.points    = row.points;
       }
 
-      // Sectors
-      if ((rtLower.includes("sector") || rtLower.includes("s1")) && row.sectors?.length) {
-        existing.sectors.push(...row.sectors);
+      // Best lap (take the fastest across all result types)
+      if (row.bestLap && (!ex.bestLap || row.bestLap < ex.bestLap)) {
+        ex.bestLap    = row.bestLap;
+        ex.bestLapNum = row.bestLapNum;
       }
 
       // Grid position
-      if ((rtLower.includes("grid") || rtLower.includes("starting")) && row.gridPos) {
-        existing.gridPos = row.gridPos;
-      }
+      if (rtl.includes("grid") && row.gridPos) ex.gridPos = row.gridPos;
 
-      // Points
-      if (row.points && !existing.points) existing.points = row.points;
-
-      // Fill in any missing fields
-      for (const field of ["firstName","lastName","nat","bike","totalTime","laps","pos"]) {
-        if (!existing[field] && row[field]) existing[field] = row[field];
+      // Fill blanks
+      for (const f of ["firstName","lastName","nat","bike","totalTime","laps"]) {
+        if (!ex[f] && row[f]) ex[f] = row[f];
       }
     }
   }
@@ -382,23 +506,19 @@ function mergeResults(resultSets) {
 
 async function scrape() {
   log("═".repeat(60));
-  log("MXGP Results Scraper v2.0 — Playwright");
-  log(`Target: ${BASE_URL}`);
-  log(`Year filter: ${YEAR_FILTER}  Category: ${CAT_FILTER || "ALL"}`);
-  log(`Output: ${OUT_FILE}`);
+  log("MXGP Results Scraper v3.0 — Playwright");
+  log(`Year: ${YEAR_FILTER}  Cat: ${CAT_FILTER || "ALL"}  Out: ${OUT_FILE}`);
   log("═".repeat(60));
 
   const browser = await chromium.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
-
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     viewport: { width: 1440, height: 900 },
     locale: "en-US",
   });
-
   const page = await context.newPage();
   page.setDefaultTimeout(TIMEOUT);
   page.on("pageerror", e => dbg("page error:", e.message));
@@ -406,15 +526,19 @@ async function scrape() {
   const allSessions = [];
   let totalRaces = 0;
 
-  // Result types we want to collect (broad match — accept everything useful)
-  // We NO LONGER filter strictly: we try ALL available result types
-  const PRIORITY_TYPES = [
-    "race result", "race results",
-    "lap chart", "lap times", "lap time",
-    "best laps", "best lap",
-    "sector times", "sector time", "sectors",
+  // Result types we want (in priority order)
+  // Lap Chart = P/L matrix → skipped. Analysis = per-rider lap+sector times → PRIMARY.
+  const WANTED = [
+    "classification",        // race results: pos, time, bike, nat
+    "analysis",              // per-rider: lap times + sectors  ← most valuable
+    "qualifying result",
     "grid", "starting grid",
-    "qualifying result", "qualifying results",
+  ];
+
+  const SKIP = [
+    "world championship", "manufacturers", "lap chart",
+    "gp classification",   // cumulative GP points
+    "photo", "video", "schedule", "timetable",
   ];
 
   try {
@@ -422,53 +546,37 @@ async function scrape() {
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded", timeout: TIMEOUT });
     await sleep(2000);
 
-    // Dump all select elements for debugging
     if (DEBUG) {
-      const selects = await page.$$eval("select", els =>
+      const sels = await page.$$eval("select", els =>
         els.map(s => ({ id: s.id, name: s.name, opts: s.options.length }))
       );
-      dbg("Page selects:", JSON.stringify(selects, null, 2));
+      dbg("Selects on page:", JSON.stringify(sels, null, 2));
     }
 
-    // ── 2. Get years ──
+    // ── Years ───────────────────────────────────────────────────
     const years = await getOptions(page, "SelectYear");
     log(`Found ${years.length} year(s): ${years.map(y => y.text).join(", ")}`);
-
-    if (!years.length) {
-      warn("No years found! The page structure may have changed. Run with --debug to save HTML.");
-      await browser.close();
-      return;
-    }
 
     const targetYears = YEAR_FILTER === "all"
       ? years
       : years.filter(y => y.text.includes(YEAR_FILTER) || y.value.includes(YEAR_FILTER));
 
     if (!targetYears.length) {
-      warn(`No year matching '${YEAR_FILTER}'. Available: ${years.map(y => y.text).join(", ")}`);
+      warn(`No year matching '${YEAR_FILTER}'`);
       await browser.close();
       return;
     }
 
-    // ── 3. Loop over years ──
     for (const year of targetYears) {
       log(`\n── Year: ${year.text} ──`);
       await selectAndWait(page, "SelectYear", year.value);
 
-      // Get classes (categories)
       const classes = await getOptions(page, "SelectClass");
-      if (!classes.length) {
-        warn("  No classes found after year select");
-        continue;
-      }
-
       const targetClasses = CAT_FILTER
         ? classes.filter(c => c.text.toUpperCase().includes(CAT_FILTER))
         : classes;
-
       log(`  Classes: ${targetClasses.map(c => c.text).join(", ")}`);
 
-      // ── 4. Loop over classes ──
       for (const cls of targetClasses) {
         log(`\n  ─ Category: ${cls.text} ─`);
         await selectAndWait(page, "SelectClass", cls.value);
@@ -477,106 +585,78 @@ async function scrape() {
         const targetEvents = EVENT_FILTER
           ? events.filter(e => e.text.toLowerCase().includes(EVENT_FILTER))
           : events;
-
         log(`    Events: ${targetEvents.length} GP(s)`);
 
-        // ── 5. Loop over events ──
         for (const event of targetEvents) {
           log(`    ─ Event: ${event.text}`);
           await selectAndWait(page, "SelectEvent", event.value);
 
           const races = await getOptions(page, "SelectRace");
-          if (!races.length) {
-            dbg("      No races found");
-            continue;
-          }
+          if (!races.length) { dbg("      No races"); continue; }
 
-          // ── 6. Loop over races ──
           for (const race of races) {
             log(`      ─ Race: ${race.text}`);
             await selectAndWait(page, "SelectRace", race.value);
 
-            // Get result types
             const resultTypes = await getOptions(page, "SelectResult").catch(() => []);
-            dbg(`        Result types found: ${resultTypes.length} — ${resultTypes.map(r => r.text).join(", ")}`);
+            dbg(`        Result types: ${resultTypes.map(r => r.text).join(", ")}`);
+
+            // Sort: WANTED types first (by priority index), SKIP types removed
+            const filteredTypes = resultTypes.filter(rt => {
+              const l = rt.text.toLowerCase();
+              return !SKIP.some(s => l.includes(s));
+            });
+
+            const sortedTypes = [...filteredTypes].sort((a, b) => {
+              const al = a.text.toLowerCase();
+              const bl = b.text.toLowerCase();
+              const ai = WANTED.findIndex(w => al.includes(w));
+              const bi = WANTED.findIndex(w => bl.includes(w));
+              return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+            });
 
             const resultSets = [];
 
-            if (resultTypes.length === 0) {
-              // No SelectResult dropdown — try to parse current page directly
-              dbg("        No SelectResult dropdown — parsing current page directly");
-              const parsed = await parseResultTable(page, "Race Results");
-              if (parsed.rows.length) {
-                resultSets.push(parsed);
-                dbg(`        → Direct parse: ${parsed.rows.length} rows`);
-              } else {
-                warn(`        No data for ${cls.text} · ${event.text} · ${race.text}`);
-              }
+            if (sortedTypes.length === 0) {
+              // No SelectResult dropdown — parse current page directly
+              const parsed = await parseResultTable(page, "Classification");
+              if (parsed.rows.length) resultSets.push(parsed);
             } else {
-              // Sort: priority types first
-              const sortedTypes = [...resultTypes].sort((a, b) => {
-                const ai = PRIORITY_TYPES.findIndex(p => a.text.toLowerCase().includes(p));
-                const bi = PRIORITY_TYPES.findIndex(p => b.text.toLowerCase().includes(p));
-                const av = ai === -1 ? 999 : ai;
-                const bv = bi === -1 ? 999 : bi;
-                return av - bv;
-              });
-
-              // ── 7. Loop over ALL result types ──
               for (const rt of sortedTypes) {
-                const rtLower = rt.text.toLowerCase();
-
-                // Skip types we definitely don't want
-                const skipTypes = ["photo", "video", "press", "live timing", "schedule", "timetable"];
-                if (skipTypes.some(s => rtLower.includes(s))) {
-                  dbg(`        Skip (irrelevant): ${rt.text}`);
-                  continue;
-                }
-
-                dbg(`        Parsing result type: "${rt.text}"`);
+                dbg(`        Parsing: "${rt.text}"`);
                 await selectAndWait(page, "SelectResult", rt.value);
-
                 const parsed = await parseResultTable(page, rt.text);
                 dbg(`        → ${parsed.rows.length} rows`);
-
-                if (parsed.rows.length) {
-                  resultSets.push(parsed);
-                }
-              }
-
-              if (!resultSets.length) {
-                warn(`        No data for ${cls.text} · ${event.text} · ${race.text}`);
-                continue;
+                if (parsed.rows.length) resultSets.push(parsed);
               }
             }
 
-            if (!resultSets.length) continue;
+            if (!resultSets.length) {
+              warn(`        No data for ${cls.text} · ${event.text} · ${race.text}`);
+              continue;
+            }
 
-            // ── 8. Merge all result types ──
             const mergedRiders = mergeResults(resultSets);
             if (!mergedRiders.length) continue;
 
             totalRaces++;
 
             const dateMatch = event.text.match(/\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/);
-            const raceDate  = dateMatch ? dateMatch[0] : year.text;
-
             const session = {
               meta: {
-                year: year.text,
-                category: cls.text,
-                event: event.text,
-                race: race.text,
-                date: raceDate,
+                year:      year.text,
+                category:  cls.text,
+                event:     event.text,
+                race:      race.text,
+                date:      dateMatch ? dateMatch[0] : year.text,
                 scrapedAt: new Date().toISOString(),
               },
               riders: mergedRiders,
             };
 
             allSessions.push(session);
-            log(`        ✓ ${mergedRiders.length} riders — ${cls.text} · ${event.text} · ${race.text}`);
+            log(`        ✓ ${mergedRiders.length} riders — ${cls.text} · ${race.text}`);
 
-            // Incremental save every 5 races
             if (allSessions.length % 5 === 0) {
               saveJSON(allSessions, OUT_FILE);
               log(`        [AUTO-SAVE] ${allSessions.length} sessions`);
@@ -592,35 +672,28 @@ async function scrape() {
     await browser.close();
   }
 
-  // ── 9. Final save ──
   log(`\n${"═".repeat(60)}`);
-  log(`DONE — ${totalRaces} races scraped across ${allSessions.length} sessions`);
+  log(`DONE — ${totalRaces} races, ${allSessions.length} sessions`);
 
-  if (allSessions.length === 0) {
-    warn("0 sessions scraped. Suggestions:");
-    warn("  1. Run with --debug to inspect HTML (debug_*.html files saved)");
-    warn("  2. The site may have changed structure — check results.mxgp.com manually");
-    warn("  3. Try --slow 2000 to give more time to ASP.NET postbacks");
-    warn("  4. Try --year 2025 (previous year may have more data)");
+  if (!allSessions.length) {
+    warn("0 sessions scraped.");
+    warn("Run with --debug to save HTML files and inspect structure.");
   }
 
   saveJSON(allSessions, OUT_FILE);
   if (EXPORT_CSV && allSessions.length) saveCSV(allSessions, OUT_FILE);
-
-  return allSessions;
 }
 
 /* ══════════════════════════════════════════
-   SAVE FUNCTIONS
+   SAVE
 ══════════════════════════════════════════ */
 
 function saveJSON(sessions, outFile) {
-  // Ensure output directory exists
   const dir = path.dirname(outFile);
   if (dir && dir !== "." && !fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
   const output = {
-    scraper:  "MXGP Results Scraper v2.0",
+    scraper:  "MXGP Results Scraper v3.0",
     scraped:  new Date().toISOString(),
     total:    sessions.length,
     sessions,
@@ -631,25 +704,22 @@ function saveJSON(sessions, outFile) {
 
 function saveCSV(sessions, jsonFile) {
   const csvFile = jsonFile.replace(/\.json$/, ".csv");
-  const header = [
-    "year","category","event","race","date",
-    "pos","nr","firstName","lastName","nat","bike",
-    "totalTime","laps","bestLap","bestLapNum",
-    "gridPos","points","consistency","avgLap"
-  ].join(",");
+  const header = ["year","category","event","race","date","pos","nr",
+    "firstName","lastName","nat","bike","totalTime","laps","bestLap",
+    "bestLapNum","gridPos","points","consistency","avgLap"].join(",");
 
   const rows = sessions.flatMap(s =>
     s.riders.map(r => {
       const lts = r.lapTimes || [];
       const avg = lts.length ? lts.reduce((a,b)=>a+b,0)/lts.length : "";
-      const sd = lts.length > 1
+      const sd  = lts.length > 1
         ? Math.sqrt(lts.map(x=>(x-avg)**2).reduce((a,b)=>a+b,0)/lts.length).toFixed(4)
         : "";
       return [
         s.meta.year, s.meta.category, `"${s.meta.event}"`, s.meta.race, s.meta.date,
         r.pos, r.nr, r.firstName, r.lastName, r.nat, r.bike,
         r.totalTime||"", r.laps||"", r.bestLap||"", r.bestLapNum||"",
-        r.gridPos||"", r.points||"", sd, avg ? avg.toFixed(3) : "",
+        r.gridPos||"", r.points||"", sd, avg ? avg.toFixed(3):"",
       ].join(",");
     })
   );
@@ -662,7 +732,4 @@ function saveCSV(sessions, jsonFile) {
    RUN
 ══════════════════════════════════════════ */
 
-scrape().catch(err => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
+scrape().catch(err => { console.error("Fatal:", err); process.exit(1); });
