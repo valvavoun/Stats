@@ -6,22 +6,15 @@ on:
     - cron: "0 22 * * 1"   # Lundi   22h UTC
   workflow_dispatch:
     inputs:
-      year:
-        description: "Année (ex: 2026, ou 'all')"
-        required: false
-        default: "2026"
-      cat:
-        description: "Catégorie (ex: MXGP, MX2, vide = toutes)"
-        required: false
-        default: "MXGP"
       debug:
-        description: "Mode debug verbose (true/false)"
+        description: "Mode debug (true/false)"
         required: false
         default: "false"
   push:
     branches: [main]
     paths:
-      - "scraper/scraper.js"
+      - "scraper/mxgp_scraper_pw.py"
+      - "scraper/convert.js"
       - ".github/workflows/scrape.yml"
 
 permissions:
@@ -29,60 +22,63 @@ permissions:
 
 jobs:
   scrape:
-    name: Scrape MXGP Results
+    name: Scrape + Convert MXGP Results
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: scraper/package-lock.json
 
-      - name: Install dependencies
-        working-directory: scraper
-        run: npm ci
-
-      - name: Install Playwright Chromium
-        working-directory: scraper
-        run: npx playwright install chromium --with-deps
-
-      - name: Run scraper
-        working-directory: scraper
-        env:
-          YEAR: ${{ github.event.inputs.year  || '2026' }}
-          CAT:  ${{ github.event.inputs.cat   || 'MXGP' }}
-          DBG:  ${{ github.event.inputs.debug || 'false' }}
+      - name: Install Playwright Python + Chromium
         run: |
-          mkdir -p ../data
-          EXTRA=""
-          if [ "$DBG" = "true" ]; then EXTRA="--debug"; fi
-          node scraper.js \
-            --year "$YEAR" \
-            --cat  "$CAT"  \
-            --out  ../data/results.json \
-            --slow 1500 \
-            $EXTRA
+          pip install playwright
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
 
-      - name: Check output
+      - name: Run Python scraper
+        working-directory: scraper
+        run: python mxgp_scraper_pw.py
+
+      - name: Check Python output
+        working-directory: scraper
+        run: |
+          if [ ! -f mxgp_results.json ]; then
+            echo "::error::mxgp_results.json introuvable"
+            exit 1
+          fi
+          SIZE=$(stat -c%s mxgp_results.json)
+          echo "mxgp_results.json : ${SIZE} bytes"
+          if [ "$SIZE" -lt 1000 ]; then
+            echo "::warning::Fichier trop petit — scraper a peut-être échoué"
+          fi
+
+      - name: Convert to stats.js format
+        working-directory: scraper
+        run: node convert.js mxgp_results.json ../data/results.json
+
+      - name: Check converted output
         run: |
           if [ ! -f data/results.json ]; then
             echo "::error::data/results.json introuvable"
             exit 1
           fi
           SESSIONS=$(node -e "const d=require('./data/results.json'); console.log(d.total||0)")
-          echo "Sessions scraped: $SESSIONS"
+          echo "Sessions converties : $SESSIONS"
           if [ "$SESSIONS" = "0" ]; then
-            echo "::warning::0 sessions — pas encore de données ou structure du site modifiée"
-            echo "::warning::Relancer manuellement avec debug=true pour voir l'HTML du site"
+            echo "::warning::0 sessions — vérifier le scraper"
           fi
 
-      # Commit → GitHub Pages se met à jour automatiquement depuis la branche main
       - name: Commit data
         run: |
           git config user.name  "github-actions[bot]"
