@@ -47,8 +47,9 @@ jobs:
           python -m playwright install-deps chromium
 
       - name: Run Python scraper
-              working-directory: scraper
-              run: python -u mxgp_scraper_pw.py
+        working-directory: scraper
+        run: |
+          python -u mxgp_scraper_pw.py
 
       - name: Check Python output
         working-directory: scraper
