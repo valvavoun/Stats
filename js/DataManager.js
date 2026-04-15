@@ -80,7 +80,7 @@ const DataManager = (() => {
      2. URL absolue si fournie
   ══════════════════════════════ */
   async function fetchResults(onLog) {
-    const urls = ["./js/mxgp_results.json"];
+    const urls = ["./mxgp_results.json"];
     for (const url of urls) {
       try {
         onLog(`📡 Fetch ${url}…`);

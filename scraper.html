@@ -659,7 +659,7 @@
 
         /* Tente de lire les fichiers JSON pour les stats */
         try {
-          const r1 = await fetch("./js/mxgp_ids.json", { method: "HEAD" });
+          const r1 = await fetch("./mxgp_ids.json", { method: "HEAD" });
           document.getElementById("badge-ids").textContent = r1.ok
             ? "✅ PRÉSENT"
             : "MANQUANT";
@@ -671,7 +671,7 @@
         }
 
         try {
-          const r2 = await fetch("./js/mxgp_results.json", { method: "HEAD" });
+          const r2 = await fetch("./mxgp_results.json", { method: "HEAD" });
           document.getElementById("badge-data").textContent = r2.ok
             ? "✅ PRÉSENT"
             : "MANQUANT";
@@ -684,7 +684,7 @@
 
         /* Count entrées JSON */
         try {
-          const r3 = await fetch("./js/mxgp_ids.json");
+          const r3 = await fetch("./mxgp_ids.json");
           const d3 = await r3.json();
           document.getElementById("s-ids").textContent =
             d3.length.toLocaleString("fr");
@@ -693,7 +693,7 @@
         }
 
         try {
-          const r4 = await fetch("./js/mxgp_results.json");
+          const r4 = await fetch("./mxgp_results.json");
           const d4 = await r4.json();
           document.getElementById("s-results").textContent = d4
             .filter((e) => !e.noData && e.riders?.length > 0)
