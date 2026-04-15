@@ -1,0 +1,73 @@
+name: MXGP Weekly Rescrape
+
+on:
+  schedule:
+    # Dimanches 20h heure Paris = 18h UTC (été UTC+2)
+    - cron: '0 18 * * 0'
+  workflow_dispatch:
+    inputs:
+      year:
+        description: 'Année à re-scraper (vide = année courante)'
+        required: false
+        default: ''
+
+jobs:
+  rescrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Déterminer l'année
+        id: year
+        run: |
+          YEAR="${{ github.event.inputs.year }}"
+          if [ -z "$YEAR" ]; then YEAR=$(date +%Y); fi
+          echo "year=$YEAR" >> $GITHUB_OUTPUT
+          echo "Année cible : $YEAR"
+
+      - name: Télécharger le cache mxgp_results.json
+        uses: actions/download-artifact@v4
+        with:
+          name: mxgp-results
+          path: .
+        continue-on-error: true
+
+      - name: scrape_ids.js (année courante seulement)
+        run: node scrape_ids.js --year=${{ steps.year.outputs.year }}
+        timeout-minutes: 60
+
+      - name: scrape_data.js (année courante seulement)
+        run: node scrape_data.js --year=${{ steps.year.outputs.year }} --workers=2
+        timeout-minutes: 90
+
+      - name: Sauvegarder mxgp_results.json en artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mxgp-results
+          path: mxgp_results.json
+          retention-days: 90
+
+      - name: Commit & push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mxgp_results.json mxgp_ids.json
+          git diff --cached --quiet || git commit -m "chore: rescrape MXGP ${{ steps.year.outputs.year }} $(date -u +%Y-%m-%dT%H:%M)"
+          git push
