@@ -1,32 +1,48 @@
-# MXGP Race Analytics
+# MXGP Stats v3
 
-Dashboard analytics MXGP avec scraping automatique via GitHub Actions.
+Dashboard statistiques FIM Motocross World Championship — données historiques complètes.
 
 ## Structure
+
 ```
-/
-├── index.html                  # Interface principale (GitHub Pages)
-├── css/stats.css               # Styles
-├── js/stats.js                 # Logique + charts (auto-fetch data/results.json)
-├── data/results.json           # Données (auto-générées par GitHub Actions)
-├── scraper/
-│   ├── scraper.js              # Scraper Playwright
-│   └── package.json
-└── .github/workflows/
-    └── scrape.yml              # Workflow auto (dimanche + lundi 22h UTC)
+mxgp-stats-v2/
+├── index.html              ← Dashboard (page principale)
+├── scraper.html            ← Gestion scraping + import
+├── scrape_ids.js           ← Phase 1 : collecte tous les IDs
+├── scrape_data.js          ← Phase 2 : scrape les données
+├── weekly-rescrape.yml     ← À déplacer dans .github/workflows/
+├── package.json
+├── mxgp_ids.json           ← Généré par scrape_ids.js
+├── mxgp_results.json       ← Généré par scrape_data.js
+├── js/
+│   ├── DataManager.js
+│   ├── StatsEngine.js
+│   ├── GraphEngine.js
+│   └── UI.js
+└── css/
+    └── style.css
 ```
 
-## Lancer le scraper en local
+## Utilisation
+
 ```bash
-cd scraper
 npm install
 npx playwright install chromium
-npm run scrape           # scrape 2026 MXGP → ../data/results.json
-npm run scrape:debug     # mode verbose + sauvegarde HTML pour debug
+
+# Phase 1 — IDs (une seule fois, 15-40 min)
+node scrape_ids.js
+
+# Phase 2 — Données (une seule fois, 2-6h)
+node scrape_data.js --workers=3
+
+# Serveur local
+npx serve . --listen 3000
+# → http://localhost:3000/scraper.html  pour importer
+# → http://localhost:3000/index.html    dashboard
 ```
 
-## Déploiement GitHub Pages
-1. Push ce repo sur GitHub
-2. Settings → Pages → Source: branch `main`, dossier `/` (root)
-3. Actions se lance auto après les courses (dim + lun soir)
-4. Lancement manuel : onglet Actions → "MXGP Auto-Scrape" → Run workflow
+## Mise à jour hebdo (GitHub Actions)
+
+1. Créer `.github/workflows/` à la racine
+2. Déplacer `weekly-rescrape.yml` dedans
+3. Pusher → cron automatique chaque dimanche 20h
