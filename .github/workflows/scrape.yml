@@ -1,0 +1,94 @@
+name: MXGP Auto-Scrape
+
+on:
+  schedule:
+    - cron: "0 22 * * 0"   # Dimanche 22h UTC
+    - cron: "0 22 * * 1"   # Lundi   22h UTC
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: "Mode debug (true/false)"
+        required: false
+        default: "false"
+  push:
+    branches: [main]
+    paths:
+      - "scraper/mxgp_scraper_pw.py"
+      - "scraper/convert.js"
+      - ".github/workflows/scrape.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    name: Scrape + Convert MXGP Results
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright Python + Chromium
+        run: |
+          pip install playwright
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+
+      - name: Run Python scraper
+        working-directory: scraper
+        run: |
+          python -u mxgp_scraper_pw.py
+
+      - name: Check Python output
+        working-directory: scraper
+        run: |
+          if [ ! -f mxgp_results.json ]; then
+            echo "::error::mxgp_results.json introuvable"
+            exit 1
+          fi
+          SIZE=$(stat -c%s mxgp_results.json)
+          echo "mxgp_results.json : ${SIZE} bytes"
+          if [ "$SIZE" -lt 1000 ]; then
+            echo "::warning::Fichier trop petit — scraper a peut-être échoué"
+          fi
+
+      - name: Convert to stats.js format
+        working-directory: scraper
+        run: node convert.js mxgp_results.json ../data/results.json
+
+      - name: Check converted output
+        run: |
+          if [ ! -f data/results.json ]; then
+            echo "::error::data/results.json introuvable"
+            exit 1
+          fi
+          SESSIONS=$(node -e "const d=require('./data/results.json'); console.log(d.total||0)")
+          echo "Sessions converties : $SESSIONS"
+          if [ "$SESSIONS" = "0" ]; then
+            echo "::warning::0 sessions — vérifier le scraper"
+          fi
+
+      - name: Commit data
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/results.json
+          if git diff --cached --quiet; then
+            echo "Pas de changement — commit ignoré"
+          else
+            SESSIONS=$(node -e "const d=require('./data/results.json'); console.log(d.total||0)")
+            git commit -m "🏁 Auto-scrape: ${SESSIONS} sessions [$(date +'%Y-%m-%d %H:%M UTC')]"
+            git push
+          fi
