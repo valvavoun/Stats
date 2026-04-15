@@ -1,290 +1,785 @@
 <!doctype html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>MXGP Stats — Scraper</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    :root{
-      --bg:#0a0c10;--bg2:#0e1118;--bg3:#12151f;
-      --b1:#1a1f2e;--b2:#252b3d;--b3:#2e3650;
-      --accent:#e8002d;
-      --c-green:#00c97a;--c-red:#e8354a;
-      --c-yellow:#f5c400;--c-blue:#2196f3;
-      --c-white:#dde3f0;--c-muted:#4e566e;
-      --fd:"Chakra Petch",monospace;--fu:"Barlow Condensed",sans-serif;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--c-white);font-family:var(--fu);min-height:100vh}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>MXGP Stats — Scraper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0a0c10;
+        --bg2: #0e1118;
+        --bg3: #12151f;
+        --b1: #1a1f2e;
+        --b2: #252b3d;
+        --b3: #2e3650;
+        --accent: #e8002d;
+        --c-green: #00c97a;
+        --c-red: #e8354a;
+        --c-yellow: #f5c400;
+        --c-blue: #2196f3;
+        --c-white: #dde3f0;
+        --c-muted: #4e566e;
+        --fd: "Chakra Petch", monospace;
+        --fu: "Barlow Condensed", sans-serif;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--c-white);
+        font-family: var(--fu);
+        min-height: 100vh;
+      }
 
-    .hdr{background:linear-gradient(180deg,#0d1020,var(--bg2));border-bottom:2px solid var(--b2);padding:0 24px;height:72px;display:flex;align-items:center;justify-content:space-between}
-    .brand-cat{font-family:var(--fd);font-size:20px;font-weight:700;letter-spacing:3px}
-    .brand-sub{font-size:11px;letter-spacing:3px;color:var(--c-muted);text-transform:uppercase;margin-top:3px}
-    .badge{display:flex;align-items:center;gap:7px;padding:4px 14px;border-radius:3px;background:rgba(232,0,45,.1);border:1px solid rgba(232,0,45,.35)}
-    .badge-lbl{font-family:var(--fd);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--accent)}
-    .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
-    .nav-link{font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:1px;padding:6px 14px;border-radius:3px;border:1px solid var(--b3);color:var(--c-muted);text-decoration:none;text-transform:uppercase}
-    .nav-link:hover{border-color:var(--c-white);color:var(--c-white)}
+      .hdr {
+        background: linear-gradient(180deg, #0d1020, var(--bg2));
+        border-bottom: 2px solid var(--b2);
+        padding: 0 24px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand-cat {
+        font-family: var(--fd);
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 3px;
+      }
+      .brand-sub {
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: var(--c-muted);
+        text-transform: uppercase;
+        margin-top: 3px;
+      }
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 14px;
+        border-radius: 3px;
+        background: rgba(232, 0, 45, 0.1);
+        border: 1px solid rgba(232, 0, 45, 0.35);
+      }
+      .badge-lbl {
+        font-family: var(--fd);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        color: var(--accent);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      .nav-link {
+        font-family: var(--fd);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        padding: 6px 14px;
+        border-radius: 3px;
+        border: 1px solid var(--b3);
+        color: var(--c-muted);
+        text-decoration: none;
+        text-transform: uppercase;
+      }
+      .nav-link:hover {
+        border-color: var(--c-white);
+        color: var(--c-white);
+      }
 
-    .main{max-width:960px;margin:0 auto;padding:32px 24px 80px}
+      .main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+      }
 
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-    @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 640px) {
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
 
-    .card{background:var(--bg2);border:1px solid var(--b2);border-radius:6px;padding:22px;margin-bottom:16px}
-    .card-title{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--c-muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-    .card-title::after{content:'';flex:1;height:1px;background:var(--b2)}
+      .card {
+        background: var(--bg2);
+        border: 1px solid var(--b2);
+        border-radius: 6px;
+        padding: 22px;
+        margin-bottom: 16px;
+      }
+      .card-title {
+        font-family: var(--fd);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: var(--c-muted);
+        text-transform: uppercase;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--b2);
+      }
 
-    .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-    .stat{background:var(--bg3);border:1px solid var(--b2);border-radius:4px;padding:13px;text-align:center}
-    .stat-val{font-family:var(--fd);font-size:22px;font-weight:700}
-    .stat-lbl{font-size:10px;letter-spacing:2px;color:var(--c-muted);text-transform:uppercase;margin-top:4px}
+      .stat-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .stat {
+        background: var(--bg3);
+        border: 1px solid var(--b2);
+        border-radius: 4px;
+        padding: 13px;
+        text-align: center;
+      }
+      .stat-val {
+        font-family: var(--fd);
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .stat-lbl {
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: var(--c-muted);
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
 
-    .cmd-block{background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:12px 14px;font-family:var(--fd);font-size:11px;color:var(--c-yellow);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .cmd-copy{background:transparent;border:1px solid var(--b2);border-radius:2px;color:var(--c-muted);font-family:var(--fd);font-size:9px;padding:3px 8px;cursor:pointer;flex-shrink:0;transition:all .15s}
-    .cmd-copy:hover{border-color:var(--c-white);color:var(--c-white)}
+      .cmd-block {
+        background: var(--bg);
+        border: 1px solid var(--b1);
+        border-radius: 4px;
+        padding: 12px 14px;
+        font-family: var(--fd);
+        font-size: 11px;
+        color: var(--c-yellow);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .cmd-copy {
+        background: transparent;
+        border: 1px solid var(--b2);
+        border-radius: 2px;
+        color: var(--c-muted);
+        font-family: var(--fd);
+        font-size: 9px;
+        padding: 3px 8px;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.15s;
+      }
+      .cmd-copy:hover {
+        border-color: var(--c-white);
+        color: var(--c-white);
+      }
 
-    .step-list{counter-reset:step;display:flex;flex-direction:column;gap:10px}
-    .step{display:flex;gap:12px;align-items:flex-start}
-    .step::before{counter-increment:step;content:counter(step);font-family:var(--fd);font-size:12px;font-weight:700;color:var(--accent);background:rgba(232,0,45,.1);border:1px solid rgba(232,0,45,.3);border-radius:3px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .step-text{font-size:13px;color:var(--c-muted);line-height:1.6;padding-top:3px}
-    .step-text strong{color:var(--c-white)}
-    .step-text code{font-family:var(--fd);font-size:10px;color:var(--c-yellow);background:var(--bg3);padding:1px 5px;border-radius:2px}
+      .step-list {
+        counter-reset: step;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .step {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .step::before {
+        counter-increment: step;
+        content: counter(step);
+        font-family: var(--fd);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        background: rgba(232, 0, 45, 0.1);
+        border: 1px solid rgba(232, 0, 45, 0.3);
+        border-radius: 3px;
+        min-width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .step-text {
+        font-size: 13px;
+        color: var(--c-muted);
+        line-height: 1.6;
+        padding-top: 3px;
+      }
+      .step-text strong {
+        color: var(--c-white);
+      }
+      .step-text code {
+        font-family: var(--fd);
+        font-size: 10px;
+        color: var(--c-yellow);
+        background: var(--bg3);
+        padding: 1px 5px;
+        border-radius: 2px;
+      }
 
-    .info-box{background:rgba(33,150,243,.06);border:1px solid rgba(33,150,243,.18);border-radius:4px;padding:13px 15px;font-size:13px;color:var(--c-muted);line-height:1.65;margin-bottom:14px}
-    .info-box strong{color:var(--c-white)}
+      .info-box {
+        background: rgba(33, 150, 243, 0.06);
+        border: 1px solid rgba(33, 150, 243, 0.18);
+        border-radius: 4px;
+        padding: 13px 15px;
+        font-size: 13px;
+        color: var(--c-muted);
+        line-height: 1.65;
+        margin-bottom: 14px;
+      }
+      .info-box strong {
+        color: var(--c-white);
+      }
 
-    .warn-box{background:rgba(245,196,0,.07);border:1px solid rgba(245,196,0,.2);border-radius:4px;padding:12px 14px;font-size:13px;color:var(--c-yellow);line-height:1.6;margin-bottom:14px}
+      .warn-box {
+        background: rgba(245, 196, 0, 0.07);
+        border: 1px solid rgba(245, 196, 0, 0.2);
+        border-radius: 4px;
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--c-yellow);
+        line-height: 1.6;
+        margin-bottom: 14px;
+      }
 
-    .prog-wrap{margin:12px 0}
-    .prog-outer{background:var(--bg3);border:1px solid var(--b2);border-radius:3px;height:7px;overflow:hidden}
-    .prog-inner{height:100%;background:var(--accent);transition:width .3s;width:0%}
-    .prog-info{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--fd);font-size:10px;color:var(--c-muted)}
+      .prog-wrap {
+        margin: 12px 0;
+      }
+      .prog-outer {
+        background: var(--bg3);
+        border: 1px solid var(--b2);
+        border-radius: 3px;
+        height: 7px;
+        overflow: hidden;
+      }
+      .prog-inner {
+        height: 100%;
+        background: var(--accent);
+        transition: width 0.3s;
+        width: 0%;
+      }
+      .prog-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        font-family: var(--fd);
+        font-size: 10px;
+        color: var(--c-muted);
+      }
 
-    .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    .btn{font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:10px 18px;border-radius:3px;border:1px solid;cursor:pointer;text-transform:uppercase;transition:all .15s}
-    .btn:disabled{opacity:.4;cursor:default}
-    .btn-red{background:var(--accent);border-color:var(--accent);color:#fff}.btn-red:hover:not(:disabled){background:#c0001e}
-    .btn-green{background:transparent;border-color:rgba(0,201,122,.4);color:var(--c-green)}.btn-green:hover:not(:disabled){background:rgba(0,201,122,.08)}
-    .btn-outline{background:transparent;border-color:var(--b3);color:var(--c-muted)}.btn-outline:hover:not(:disabled){border-color:var(--c-white);color:var(--c-white)}
-    .btn-danger{background:transparent;border-color:rgba(232,53,74,.3);color:var(--c-red)}.btn-danger:hover{background:rgba(232,53,74,.08)}
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .btn {
+        font-family: var(--fd);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        padding: 10px 18px;
+        border-radius: 3px;
+        border: 1px solid;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.15s;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .btn-red {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn-red:hover:not(:disabled) {
+        background: #c0001e;
+      }
+      .btn-green {
+        background: transparent;
+        border-color: rgba(0, 201, 122, 0.4);
+        color: var(--c-green);
+      }
+      .btn-green:hover:not(:disabled) {
+        background: rgba(0, 201, 122, 0.08);
+      }
+      .btn-outline {
+        background: transparent;
+        border-color: var(--b3);
+        color: var(--c-muted);
+      }
+      .btn-outline:hover:not(:disabled) {
+        border-color: var(--c-white);
+        color: var(--c-white);
+      }
+      .btn-danger {
+        background: transparent;
+        border-color: rgba(232, 53, 74, 0.3);
+        color: var(--c-red);
+      }
+      .btn-danger:hover {
+        background: rgba(232, 53, 74, 0.08);
+      }
 
-    .log-box{background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:10px 13px;height:300px;overflow-y:auto;font-family:var(--fd);font-size:11px;line-height:1.65;letter-spacing:.4px}
-    .ll{color:var(--c-muted);white-space:pre-wrap;word-break:break-all}
-    .ll.ok{color:var(--c-green)}.ll.warn{color:var(--c-yellow)}.ll.err{color:var(--c-red)}.ll.head{color:var(--c-white);font-weight:700}
+      .log-box {
+        background: var(--bg);
+        border: 1px solid var(--b1);
+        border-radius: 4px;
+        padding: 10px 13px;
+        height: 300px;
+        overflow-y: auto;
+        font-family: var(--fd);
+        font-size: 11px;
+        line-height: 1.65;
+        letter-spacing: 0.4px;
+      }
+      .ll {
+        color: var(--c-muted);
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .ll.ok {
+        color: var(--c-green);
+      }
+      .ll.warn {
+        color: var(--c-yellow);
+      }
+      .ll.err {
+        color: var(--c-red);
+      }
+      .ll.head {
+        color: var(--c-white);
+        font-weight: 700;
+      }
 
-    .badge-status{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:2px;font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1px}
-    .badge-status.ok{background:rgba(0,201,122,.12);color:var(--c-green)}
-    .badge-status.warn{background:rgba(245,196,0,.12);color:var(--c-yellow)}
-    .badge-status.none{background:rgba(78,86,110,.15);color:var(--c-muted)}
+      .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 9px;
+        border-radius: 2px;
+        font-family: var(--fd);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+      .badge-status.ok {
+        background: rgba(0, 201, 122, 0.12);
+        color: var(--c-green);
+      }
+      .badge-status.warn {
+        background: rgba(245, 196, 0, 0.12);
+        color: var(--c-yellow);
+      }
+      .badge-status.none {
+        background: rgba(78, 86, 110, 0.15);
+        color: var(--c-muted);
+      }
 
-    .ticker{position:fixed;bottom:0;left:0;right:0;height:30px;background:#08090d;border-top:1px solid var(--b2);display:flex;align-items:center;padding:0 16px;font-family:var(--fd);font-size:11px;color:var(--c-muted);gap:12px}
-    .t-lbl{color:var(--accent);font-weight:700;letter-spacing:2px}
-  </style>
-</head>
-<body>
-
-<div class="hdr">
-  <div><div class="brand-cat">MXGP STATS</div><div class="brand-sub">Scraper · Node.js + Playwright</div></div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="badge"><div class="dot"></div><div class="badge-lbl">SCRAPER</div></div>
-    <a class="nav-link" href="index.html">📊 Dashboard</a>
-  </div>
-</div>
-
-<div class="main">
-
-  <!-- Statut fichiers -->
-  <div class="stat-row">
-    <div class="stat">
-      <div class="stat-val" id="s-ids">—</div>
-      <div class="stat-lbl">IDs scrapés</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="s-results">—</div>
-      <div class="stat-lbl">Résultats</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="s-db">—</div>
-      <div class="stat-lbl">En base</div>
-    </div>
-  </div>
-
-  <div class="grid2">
-
-    <!-- PHASE 1 -->
-    <div class="card">
-      <div class="card-title">Phase 1 — Scrape IDs <span id="badge-ids" class="badge-status none" style="margin-left:auto">À FAIRE</span></div>
-      <div class="info-box">Parcourt tous les dropdowns du site MXGP et collecte toutes les combinaisons d'IDs. À faire <strong>une seule fois</strong> (reprend si interrompu).</div>
-      <div class="cmd-block">
-        <span>node scrape_ids.js</span>
-        <button class="cmd-copy" onclick="copy('node scrape_ids.js')">Copier</button>
+      .ticker {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: #08090d;
+        border-top: 1px solid var(--b2);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        font-family: var(--fd);
+        font-size: 11px;
+        color: var(--c-muted);
+        gap: 12px;
+      }
+      .t-lbl {
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hdr">
+      <div>
+        <div class="brand-cat">MXGP STATS</div>
+        <div class="brand-sub">Scraper · Node.js + Playwright</div>
       </div>
-      <div class="cmd-block">
-        <span>node scrape_ids.js --year=2026</span>
-        <button class="cmd-copy" onclick="copy('node scrape_ids.js --year=2026')">Copier</button>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div class="badge">
+          <div class="dot"></div>
+          <div class="badge-lbl">SCRAPER</div>
+        </div>
+        <a class="nav-link" href="index.html">📊 Dashboard</a>
       </div>
-      <div style="font-size:12px;color:var(--c-muted);margin-top:8px">⏱ Durée estimée : 15–40 min (toutes années)</div>
     </div>
 
-    <!-- PHASE 2 -->
-    <div class="card">
-      <div class="card-title">Phase 2 — Scrape données <span id="badge-data" class="badge-status none" style="margin-left:auto">À FAIRE</span></div>
-      <div class="info-box">Scrape les tableaux de résultats (30+ pilotes par session). Reprise automatique. Données manquantes sur le site = skip silencieux.</div>
-      <div class="cmd-block">
-        <span>node scrape_data.js --workers=3</span>
-        <button class="cmd-copy" onclick="copy('node scrape_data.js --workers=3')">Copier</button>
+    <div class="main">
+      <!-- Statut fichiers -->
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-val" id="s-ids">—</div>
+          <div class="stat-lbl">IDs scrapés</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="s-results">—</div>
+          <div class="stat-lbl">Résultats</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="s-db">—</div>
+          <div class="stat-lbl">En base</div>
+        </div>
       </div>
-      <div class="cmd-block">
-        <span>node scrape_data.js --year=2026</span>
-        <button class="cmd-copy" onclick="copy('node scrape_data.js --year=2026')">Copier</button>
+
+      <div class="grid2">
+        <!-- PHASE 1 -->
+        <div class="card">
+          <div class="card-title">
+            Phase 1 — Scrape IDs
+            <span
+              id="badge-ids"
+              class="badge-status none"
+              style="margin-left: auto"
+              >À FAIRE</span
+            >
+          </div>
+          <div class="info-box">
+            Parcourt tous les dropdowns du site MXGP et collecte toutes les
+            combinaisons d'IDs. À faire <strong>une seule fois</strong> (reprend
+            si interrompu).
+          </div>
+          <div class="cmd-block">
+            <span>node scrape_ids.js</span>
+            <button class="cmd-copy" onclick="copy('node scrape_ids.js')">
+              Copier
+            </button>
+          </div>
+          <div class="cmd-block">
+            <span>node scrape_ids.js --year=2026</span>
+            <button
+              class="cmd-copy"
+              onclick="copy('node scrape_ids.js --year=2026')"
+            >
+              Copier
+            </button>
+          </div>
+          <div style="font-size: 12px; color: var(--c-muted); margin-top: 8px">
+            ⏱ Durée estimée : 15–40 min (toutes années)
+          </div>
+        </div>
+
+        <!-- PHASE 2 -->
+        <div class="card">
+          <div class="card-title">
+            Phase 2 — Scrape données
+            <span
+              id="badge-data"
+              class="badge-status none"
+              style="margin-left: auto"
+              >À FAIRE</span
+            >
+          </div>
+          <div class="info-box">
+            Scrape les tableaux de résultats (30+ pilotes par session). Reprise
+            automatique. Données manquantes sur le site = skip silencieux.
+          </div>
+          <div class="cmd-block">
+            <span>node scrape_data.js --workers=3</span>
+            <button
+              class="cmd-copy"
+              onclick="copy('node scrape_data.js --workers=3')"
+            >
+              Copier
+            </button>
+          </div>
+          <div class="cmd-block">
+            <span>node scrape_data.js --year=2026</span>
+            <button
+              class="cmd-copy"
+              onclick="copy('node scrape_data.js --year=2026')"
+            >
+              Copier
+            </button>
+          </div>
+          <div style="font-size: 12px; color: var(--c-muted); margin-top: 8px">
+            ⏱ Durée estimée : 2–6h (complet) · 15–30 min (1 année)
+          </div>
+        </div>
       </div>
-      <div style="font-size:12px;color:var(--c-muted);margin-top:8px">⏱ Durée estimée : 2–6h (complet) · 15–30 min (1 année)</div>
+
+      <!-- Import -->
+      <div class="card">
+        <div class="card-title">Import → IndexedDB</div>
+        <div class="info-box">
+          Lit <strong>mxgp_results.json</strong> et l'importe dans la base
+          locale du navigateur (IndexedDB). Import incrémental : les données
+          déjà présentes ne sont pas écrasées.<br /><br />
+          ⚠️ Nécessite un serveur local. Lance d'abord :
+          <code>npx serve .</code> ou <code>python -m http.server 8080</code>
+        </div>
+        <div id="prog-wrap" style="display: none" class="prog-wrap">
+          <div class="prog-outer">
+            <div class="prog-inner" id="prog-bar"></div>
+          </div>
+          <div class="prog-info">
+            <span id="prog-label">—</span
+            ><span id="prog-pct" style="font-weight: 700; color: var(--c-white)"
+              >0%</span
+            >
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-red" id="btn-import" onclick="doImport(false)">
+            ⬇️ Importer mxgp_results.json
+          </button>
+          <button
+            class="btn btn-green"
+            id="btn-update"
+            onclick="doImport(true)"
+          >
+            🔄 Re-import année courante
+          </button>
+          <button class="btn btn-danger" onclick="doReset()">
+            🗑 Reset base
+          </button>
+        </div>
+      </div>
+
+      <!-- Auto-update hebdo -->
+      <div class="card">
+        <div class="card-title">
+          ⏰ Mise à jour automatique — GitHub Actions
+        </div>
+        <div class="warn-box">
+          Le fichier <strong>weekly-rescrape.yml</strong> est prêt dans le
+          dossier.<br />
+          À déplacer manuellement vers :
+          <strong>.github/workflows/weekly-rescrape.yml</strong>
+        </div>
+        <div class="step-list">
+          <div class="step">
+            <div class="step-text">
+              Créer le dossier <code>.github/workflows/</code> à la racine du
+              repo
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-text">
+              Déplacer <code>weekly-rescrape.yml</code> dans ce dossier
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-text">
+              Pusher sur GitHub — le cron se déclenchera
+              <strong>chaque dimanche à 20h</strong>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-text">
+              Pour forcer un re-scrape : GitHub → Actions → "MXGP Weekly
+              Rescrape" → "Run workflow"
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Console -->
+      <div class="card">
+        <div class="card-title">
+          Console
+          <button
+            class="btn-outline btn"
+            style="margin-left: auto; padding: 3px 9px; font-size: 10px"
+            onclick="clearLog()"
+          >
+            Vider
+          </button>
+        </div>
+        <div class="log-box" id="main-log">
+          <div class="ll">En attente…</div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Import -->
-  <div class="card">
-    <div class="card-title">Import → IndexedDB</div>
-    <div class="info-box">
-      Lit <strong>mxgp_results.json</strong> et l'importe dans la base locale du navigateur (IndexedDB). 
-      Import incrémental : les données déjà présentes ne sont pas écrasées.<br><br>
-      ⚠️ Nécessite un serveur local. Lance d'abord : <code>npx serve .</code> ou <code>python -m http.server 8080</code>
+    <div class="ticker">
+      <span class="t-lbl">MXGP</span
+      ><span id="ticker-txt">Scraper v3 — prêt</span>
     </div>
-    <div id="prog-wrap" style="display:none" class="prog-wrap">
-      <div class="prog-outer"><div class="prog-inner" id="prog-bar"></div></div>
-      <div class="prog-info"><span id="prog-label">—</span><span id="prog-pct" style="font-weight:700;color:var(--c-white)">0%</span></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-red"   id="btn-import" onclick="doImport(false)">⬇️ Importer mxgp_results.json</button>
-      <button class="btn btn-green" id="btn-update" onclick="doImport(true)">🔄 Re-import année courante</button>
-      <button class="btn btn-danger"                onclick="doReset()">🗑 Reset base</button>
-    </div>
-  </div>
 
-  <!-- Auto-update hebdo -->
-  <div class="card">
-    <div class="card-title">⏰ Mise à jour automatique — GitHub Actions</div>
-    <div class="warn-box">
-      Le fichier <strong>weekly-rescrape.yml</strong> est prêt dans le dossier.<br>
-      À déplacer manuellement vers : <strong>.github/workflows/weekly-rescrape.yml</strong>
-    </div>
-    <div class="step-list">
-      <div class="step"><div class="step-text">Créer le dossier <code>.github/workflows/</code> à la racine du repo</div></div>
-      <div class="step"><div class="step-text">Déplacer <code>weekly-rescrape.yml</code> dans ce dossier</div></div>
-      <div class="step"><div class="step-text">Pusher sur GitHub — le cron se déclenchera <strong>chaque dimanche à 20h</strong></div></div>
-      <div class="step"><div class="step-text">Pour forcer un re-scrape : GitHub → Actions → "MXGP Weekly Rescrape" → "Run workflow"</div></div>
-    </div>
-  </div>
+    <script src="js/DataManager.js"></script>
+    <script>
+      let _busy = false;
 
-  <!-- Console -->
-  <div class="card">
-    <div class="card-title">Console <button class="btn-outline btn" style="margin-left:auto;padding:3px 9px;font-size:10px" onclick="clearLog()">Vider</button></div>
-    <div class="log-box" id="main-log"><div class="ll">En attente…</div></div>
-  </div>
+      (async () => {
+        await DataManager.init().catch(() => {});
+        await refreshStats();
+      })();
 
-</div>
+      async function refreshStats() {
+        const db = await DataManager.getDBStats().catch(() => ({
+          sessions: 0,
+          riders: 0,
+        }));
+        document.getElementById("s-db").textContent =
+          db.sessions.toLocaleString("fr");
 
-<div class="ticker"><span class="t-lbl">MXGP</span><span id="ticker-txt">Scraper v3 — prêt</span></div>
+        /* Tente de lire les fichiers JSON pour les stats */
+        try {
+          const r1 = await fetch("./js/mxgp_ids.json", { method: "HEAD" });
+          document.getElementById("badge-ids").textContent = r1.ok
+            ? "✅ PRÉSENT"
+            : "MANQUANT";
+          document.getElementById("badge-ids").className =
+            "badge-status " + (r1.ok ? "ok" : "warn");
+        } catch {
+          document.getElementById("badge-ids").textContent = "MANQUANT";
+          document.getElementById("badge-ids").className = "badge-status warn";
+        }
 
-<script src="js/DataManager.js"></script>
-<script>
-let _busy=false;
+        try {
+          const r2 = await fetch("./js/mxgp_results.json", { method: "HEAD" });
+          document.getElementById("badge-data").textContent = r2.ok
+            ? "✅ PRÉSENT"
+            : "MANQUANT";
+          document.getElementById("badge-data").className =
+            "badge-status " + (r2.ok ? "ok" : "warn");
+        } catch {
+          document.getElementById("badge-data").textContent = "MANQUANT";
+          document.getElementById("badge-data").className = "badge-status warn";
+        }
 
-(async () => {
-  await DataManager.init().catch(()=>{});
-  await refreshStats();
-})();
+        /* Count entrées JSON */
+        try {
+          const r3 = await fetch("./js/mxgp_ids.json");
+          const d3 = await r3.json();
+          document.getElementById("s-ids").textContent =
+            d3.length.toLocaleString("fr");
+        } catch {
+          document.getElementById("s-ids").textContent = "—";
+        }
 
-async function refreshStats() {
-  const db = await DataManager.getDBStats().catch(()=>({sessions:0,riders:0}));
-  document.getElementById('s-db').textContent = db.sessions.toLocaleString('fr');
+        try {
+          const r4 = await fetch("./js/mxgp_results.json");
+          const d4 = await r4.json();
+          document.getElementById("s-results").textContent = d4
+            .filter((e) => !e.noData && e.riders?.length > 0)
+            .length.toLocaleString("fr");
+        } catch {
+          document.getElementById("s-results").textContent = "—";
+        }
+      }
 
-  /* Tente de lire les fichiers JSON pour les stats */
-  try {
-    const r1 = await fetch('./mxgp_ids.json',{method:'HEAD'});
-    document.getElementById('badge-ids').textContent = r1.ok ? '✅ PRÉSENT' : 'MANQUANT';
-    document.getElementById('badge-ids').className   = 'badge-status '+(r1.ok?'ok':'warn');
-  } catch { document.getElementById('badge-ids').textContent='MANQUANT'; document.getElementById('badge-ids').className='badge-status warn'; }
+      async function doImport(updateOnly) {
+        if (_busy) return;
+        _busy = true;
+        document.getElementById("btn-import").disabled = true;
+        document.getElementById("btn-update").disabled = true;
+        document.getElementById("prog-wrap").style.display = "";
 
-  try {
-    const r2 = await fetch('./mxgp_results.json',{method:'HEAD'});
-    document.getElementById('badge-data').textContent = r2.ok ? '✅ PRÉSENT' : 'MANQUANT';
-    document.getElementById('badge-data').className   = 'badge-status '+(r2.ok?'ok':'warn');
-  } catch { document.getElementById('badge-data').textContent='MANQUANT'; document.getElementById('badge-data').className='badge-status warn'; }
+        const onProg = ({ pct, done, total }) => {
+          document.getElementById("prog-bar").style.width = pct + "%";
+          document.getElementById("prog-pct").textContent = pct + "%";
+          document.getElementById("prog-label").textContent =
+            (done || 0) + " / " + (total || 0);
+          document.getElementById("ticker-txt").textContent =
+            "Import " + pct + "%";
+        };
 
-  /* Count entrées JSON */
-  try {
-    const r3 = await fetch('./mxgp_ids.json'); const d3=await r3.json();
-    document.getElementById('s-ids').textContent=d3.length.toLocaleString('fr');
-  } catch { document.getElementById('s-ids').textContent='—'; }
+        try {
+          if (updateOnly) {
+            const year = new Date().getFullYear();
+            await DataManager.reimportYear(year, addLog, onProg);
+          } else {
+            await DataManager.importFromJSON(addLog, onProg);
+          }
+          await refreshStats();
+          document.getElementById("ticker-txt").textContent =
+            "Import terminé ✅";
+        } catch (e) {
+          addLog("❌ " + e.message, "err");
+        } finally {
+          _busy = false;
+          document.getElementById("btn-import").disabled = false;
+          document.getElementById("btn-update").disabled = false;
+        }
+      }
 
-  try {
-    const r4 = await fetch('./mxgp_results.json'); const d4=await r4.json();
-    document.getElementById('s-results').textContent=d4.filter(e=>!e.noData&&e.riders?.length>0).length.toLocaleString('fr');
-  } catch { document.getElementById('s-results').textContent='—'; }
-}
+      async function doReset() {
+        if (!confirm("Supprimer TOUTES les données de la base IndexedDB ?"))
+          return;
+        await DataManager.resetDB();
+        await refreshStats();
+        addLog("🗑 Base réinitialisée", "warn");
+      }
 
-async function doImport(updateOnly) {
-  if (_busy) return;
-  _busy=true;
-  document.getElementById('btn-import').disabled=true;
-  document.getElementById('btn-update').disabled=true;
-  document.getElementById('prog-wrap').style.display='';
+      function addLog(msg, cls = "") {
+        const box = document.getElementById("main-log");
+        const d = document.createElement("div");
+        d.className =
+          "ll " +
+          (cls ||
+            (msg.includes("✅")
+              ? "ok"
+              : msg.includes("❌")
+                ? "err"
+                : msg.includes("⚠️")
+                  ? "warn"
+                  : ""));
+        d.textContent = "[" + new Date().toLocaleTimeString("fr") + "] " + msg;
+        box.appendChild(d);
+        box.scrollTop = box.scrollHeight;
+        while (box.querySelectorAll(".ll").length > 400)
+          box.querySelector(".ll").remove();
+      }
 
-  const onProg=({pct,done,total})=>{
-    document.getElementById('prog-bar').style.width=pct+'%';
-    document.getElementById('prog-pct').textContent=pct+'%';
-    document.getElementById('prog-label').textContent=(done||0)+' / '+(total||0);
-    document.getElementById('ticker-txt').textContent='Import '+pct+'%';
-  };
+      function clearLog() {
+        document.getElementById("main-log").innerHTML = "";
+      }
 
-  try {
-    if (updateOnly) {
-      const year=new Date().getFullYear();
-      await DataManager.reimportYear(year,addLog,onProg);
-    } else {
-      await DataManager.importFromJSON(addLog,onProg);
-    }
-    await refreshStats();
-    document.getElementById('ticker-txt').textContent='Import terminé ✅';
-  } catch(e) {
-    addLog('❌ '+e.message,'err');
-  } finally {
-    _busy=false;
-    document.getElementById('btn-import').disabled=false;
-    document.getElementById('btn-update').disabled=false;
-  }
-}
-
-async function doReset() {
-  if (!confirm('Supprimer TOUTES les données de la base IndexedDB ?')) return;
-  await DataManager.resetDB();
-  await refreshStats();
-  addLog('🗑 Base réinitialisée','warn');
-}
-
-function addLog(msg,cls='') {
-  const box=document.getElementById('main-log');
-  const d=document.createElement('div');
-  d.className='ll '+(cls||(msg.includes('✅')?'ok':msg.includes('❌')?'err':msg.includes('⚠️')?'warn':''));
-  d.textContent='['+new Date().toLocaleTimeString('fr')+'] '+msg;
-  box.appendChild(d);
-  box.scrollTop=box.scrollHeight;
-  while(box.querySelectorAll('.ll').length>400) box.querySelector('.ll').remove();
-}
-
-function clearLog() { document.getElementById('main-log').innerHTML=''; }
-
-function copy(text) {
-  navigator.clipboard.writeText(text).then(()=>{
-    addLog('📋 Copié : '+text);
-  }).catch(()=>{
-    addLog('⚠️ Copie manuelle : '+text,'warn');
-  });
-}
-</script>
-</body>
+      function copy(text) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            addLog("📋 Copié : " + text);
+          })
+          .catch(() => {
+            addLog("⚠️ Copie manuelle : " + text, "warn");
+          });
+      }
+    </script>
+  </body>
 </html>

@@ -4058,5 +4058,1745 @@
     "riders": [],
     "scrapedAt": "2026-04-15T18:04:53.250Z",
     "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2049",
+      "name": "Grand Prix of Italy"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "4",
+      "name": "GP Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:34.932Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2049",
+      "name": "Grand Prix of Italy"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "6",
+      "name": "Manufacturers Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:35.009Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2049",
+      "name": "Grand Prix of Italy"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:35.015Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2049",
+      "name": "Grand Prix of Italy"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "6",
+      "name": "Manufacturers Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:38.250Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2049",
+      "name": "Grand Prix of Italy"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "5",
+      "name": "World Championship Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:39.671Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "301",
+      "name": "Free Practice 1"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:41.006Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "302",
+      "name": "Free Practice 2"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:44.324Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "302",
+      "name": "Free Practice 2"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:45.656Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "301",
+      "name": "Free Practice 1"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:45.739Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "311",
+      "name": "Time Practice"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:48.970Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "341",
+      "name": "Warm-up"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:50.320Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "311",
+      "name": "Time Practice"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:50.410Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:53.616Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "2",
+      "name": "Lap Chart"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:54.987Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "341",
+      "name": "Warm-up"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:55.067Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "4",
+      "name": "GP Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:56.841Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "5",
+      "name": "World Championship Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:58.212Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:18:59.721Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:01.497Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "2",
+      "name": "Lap Chart"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:02.883Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "6",
+      "name": "Manufacturers Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:02.958Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "4",
+      "name": "GP Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:04.719Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "5",
+      "name": "World Championship Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:06.122Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:07.608Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "301",
+      "name": "Free Practice 1"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:10.775Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2050",
+      "name": "Grand Prix of France"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "6",
+      "name": "Manufacturers Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:10.836Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "301",
+      "name": "Free Practice 1"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:12.198Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "302",
+      "name": "Free Practice 2"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:15.428Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "311",
+      "name": "Time Practice"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:16.861Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "302",
+      "name": "Free Practice 2"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:16.905Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "341",
+      "name": "Warm-up"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:20.100Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "341",
+      "name": "Warm-up"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:21.516Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "311",
+      "name": "Time Practice"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:21.546Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "2",
+      "name": "Lap Chart"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:24.755Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:26.188Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:26.196Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "5",
+      "name": "World Championship Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:27.991Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "6",
+      "name": "Manufacturers Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:29.426Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "4",
+      "name": "GP Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:29.433Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "2",
+      "name": "Lap Chart"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:32.660Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:34.091Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:34.095Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "5",
+      "name": "World Championship Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:35.894Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "6",
+      "name": "Manufacturers Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:37.330Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2051",
+      "name": "Grand Prix of Sweden"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "4",
+      "name": "GP Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:37.332Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "301",
+      "name": "Free Practice 1"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:41.993Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "302",
+      "name": "Free Practice 2"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:43.426Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "301",
+      "name": "Free Practice 1"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:43.426Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "311",
+      "name": "Time Practice"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:46.662Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "311",
+      "name": "Time Practice"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:48.094Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "302",
+      "name": "Free Practice 2"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:48.096Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "341",
+      "name": "Warm-up"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:51.327Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:52.760Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "341",
+      "name": "Warm-up"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:52.761Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "4",
+      "name": "GP Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:55.994Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "3",
+      "name": "Analysis"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:55.997Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "2",
+      "name": "Lap Chart"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:57.428Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "6",
+      "name": "Manufacturers Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:19:59.229Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "352",
+      "name": "Grand Prix Race 2"
+    },
+    "result": {
+      "id": "1",
+      "name": "Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:20:00.662Z",
+    "noData": true
+  },
+  {
+    "year": {
+      "id": "2005",
+      "name": "2005"
+    },
+    "champ": {
+      "id": "1",
+      "name": "FIM Motocross World Championship"
+    },
+    "class": {
+      "id": "6",
+      "name": "MX1"
+    },
+    "event": {
+      "id": "2052",
+      "name": "Grand Prix of Rep. of South Africa"
+    },
+    "race": {
+      "id": "351",
+      "name": "Grand Prix Race 1"
+    },
+    "result": {
+      "id": "5",
+      "name": "World Championship Classification"
+    },
+    "riders": [],
+    "scrapedAt": "2026-04-15T18:20:00.664Z",
+    "noData": true
   }
 ]
